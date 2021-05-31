@@ -2,10 +2,9 @@
 for minisql 
 
 How to represent an address in a file?
-* Use 3 bytes
-* The highest 12 bits is block id (0 to 4095)
-* The lowest 9 bits is offset (8-byte-padding, 0 to 511)
-* The 3 bits in the middle is left for extra functions
+* Use 4 bytes (use `struct`)
+* 2 bytes is for block id
+* 2 bytes is for offset
 
 Some points: 
 * The records in a record file need not to be sorted. The pointers in a index file need to be sorted.  
