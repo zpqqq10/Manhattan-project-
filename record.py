@@ -14,10 +14,8 @@ class record_manager:
         f = open("./record/"+tbl_name+".rec", "rb+")
         bytes = f.read(8)
         # buffer.read(tbl_name,0,0,8)
-        print(bytes)
         valid_bytes, free_bid, free_off, tail_flag, length = struct.unpack(
             "=?hh?h", bytes)
-        print(valid_bytes, free_bid, free_off, length, tail_flag)
         if tail_flag == False:
             # wirte the record in free_bid:free_off
             f.seek(free_bid * 4096 + free_off * 8, 0)
@@ -30,17 +28,15 @@ class record_manager:
         bytes = struct.pack("=?", True)+reduce(lambda x, y: x+y, map(lambda x,
                                                                      y: struct.pack(x[1], y), attr, value))
         bytes += pad_num * struct.pack("=x")
-        print(bytes)
         # wirte the record in free_bid:free_off
         f.seek(free_bid * 4096 + free_off * 8, 0)
         f.write(bytes)
         # buffer.write(tbl_name,free_bid,free_off,length << 3,bytes)
         if tail_flag:
-            new_off = free_bid * 4096 + free_off*8 + (length << 3)
             # compute the next free record
-            next_free_bid = new_off // 4096
-            next_free_off = new_off % 4096 >> 3
-            if (4096 - free_off * 8) < length * 8:
+            next_free_bid = free_bid
+            next_free_off = free_off+length
+            if (4096 - next_free_off * 8 ) < length * 8:
                 next_free_bid = free_bid + 1
                 next_free_off = 0
             # print(next_free_bid,next_free_off,new_off)
@@ -51,6 +47,7 @@ class record_manager:
         f.seek(0, 0)
         f.write(bytes)
         f.close()
+        return (free_bid,free_off)
         # buffer.write(tbl_name,0,0,bytes,6)
 
     def delete_with_index(self, tbl_name, bid, off):
@@ -77,26 +74,82 @@ class record_manager:
         # length = sum(attr[i][2]) mod 8
         length = (length % 8 != 0) + (length >> 3)
         content = struct.pack("=?hh?h", False, 0, 1, True, length)
-        print(content)
         with open("./record/"+tbl_name+".rec", "wb") as f:
             f.write(content)
             f.close()
         return 0
+    # contraint list of tumples
+    # (attr_index0,ops,value)
+    # ops (<,0) (<=,1) (>,2) (>=,3) (==,4)
 
-    def scan_all(self, attr):
-        print(1)
-
+    def check_record(self,record,attr,constraint):
+        for item in constraint:
+            if item[1] == 0:
+                if record[item[0]+1] < item[2]:
+                    continue
+                else:
+                    return False 
+            elif item[1] == 1:
+                if record[item[0]+1] <= item[2]:
+                    continue
+                else:
+                    return False 
+            elif item[1] ==2:
+                if record[item[0]+1] > item[2]:
+                    continue
+                else:
+                    return False 
+            elif item[1] == 3:
+                if record[item[0]+1] >= item[2]:
+                    continue
+                else:
+                    return False 
+            elif item[1] == 4:
+                if record[item[0]+1] == item[2]:
+                    continue
+                else:
+                    return False 
+        return True
+    def scan_all(self,tbl_name,constraint, attr):
+        f = open("./record/"+tbl_name+".rec", "rb+")
+        bid = 0
+        result = []
+        format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
+        record_length_r = sum([i[2] for i in attr]) + 1
+        block_len = 4096 >>3
+        while block_len == 512:
+            #content = buffer.read_block(tbl_name,bid)
+            block_content = f.read(4096)
+            block_len = len(block_content)
+            block_len = block_len >> 3
+            idx = 0
+            if bid==0:
+                valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack("=?hh?h", block_content[:8])
+                idx += 1
+            while idx + record_length_a <= block_len:
+                record = struct.unpack(format,block_content[idx<<3:(idx<<3)+record_length_r])
+                print(record)
+                if record[0] & self.check_record(record,attr,constraint):
+                    result.append(record)
+                idx += record_length_a
+            bid = bid + 1
+        return result
+            
 
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])
     t = record_manager()
     t.create("abc", [("a", "l", 4), ("b", "l", 4)])
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
-    t.delete_with_index("abc", 0, 3)
-    t.delete_with_index("abc", 0, 1)
+    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
+    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
+    for i in range(10):
+        t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%10,(i+1)%10))
+    t.delete_with_index("abc", 0, 3)
+    t.delete_with_index("abc", 0, 1)
+    print(t.scan_all("abc",[(0,2,2)], [("a", "l", 4), ("b", "l", 4)]))
+    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
+    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
+    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27))

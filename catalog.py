@@ -92,7 +92,7 @@ class catalog_manager:
         file.close()
     
     def __del__(self): 
-        self.save()
+        # self.save()
         print('del catalog_manager')
 
 
@@ -173,3 +173,4 @@ t = catalog_manager()
 t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 t.drop_table('xyz')
+t.save()
