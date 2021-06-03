@@ -30,10 +30,13 @@ class catalog_manager:
         for i in range(table_num):
             len_tbl, len_pky, num_attr = struct.unpack('=iii', file.read(3*4))
             table_name, primary = struct.unpack('='+str(len_tbl)+'s'+str(len_pky)+'s', file.read(len_tbl+len_pky))
+            table_name = table_name.decode('utf-8')
+            primary = primary.decode('utf-8')
             self.tables[table_name] = Table(table_name, primary, num_attr)  # read a table
             for i in range(num_attr): 
                 len_name, = struct.unpack('=i', file.read(4))
                 attr_name, = struct.unpack('='+str(len_name)+'s', file.read(len_name))
+                attr_name = attr_name.decode('utf-8')
                 uniqueness, = struct.unpack('=?', file.read(1))
                 type, = struct.unpack('=i', file.read(4))
                 if type == 1: 
@@ -42,16 +45,19 @@ class catalog_manager:
                     self.tables[table_name].attributes.append(Attribute(attr_name, uniqueness, 'f', 0))
                 elif type == 3:
                     length, = struct.unpack('=i', file.read(4))
-                    self.tables[table_name].attributes.append(Attribute(uniqueness, 's', length))
+                    self.tables[table_name].attributes.append(Attribute(uniqueness, str(length)+'s', length))
         file.close()
         # build indices
         file = open('./catalog/index_catalog.dat', 'rb')
         index_num, = struct.unpack('=i', file.read(4))
         for i in range(index_num):
             len_index, len_tbl, len_key = struct.unpack('=iii', file.read(3*4))
-            index = struct.unpack('='+str(len_index)+'s', file.read(len_index))
-            tbl   = struct.unpack('='+str(len_tbl)+'s', file.read(len_tbl))
-            key   = struct.unpack('='+str(len_key)+'s', file.read(len_key))
+            index, = struct.unpack('='+str(len_index)+'s', file.read(len_index))
+            tbl,   = struct.unpack('='+str(len_tbl)+'s', file.read(len_tbl))
+            key,   = struct.unpack('='+str(len_key)+'s', file.read(len_key))
+            index  = index.decode('utf-8')
+            tbl    = tbl.decode('utf-8')
+            key    = key.decode('utf-8')
             self.indices[index] = [tbl, key]
         file.close()
     
@@ -66,7 +72,6 @@ class catalog_manager:
             len_pky = len(self.tables[table].primary_key)# length of the name of the primary key
             file.write(struct.pack('=iii', len_tbl, len_pky, len(self.tables[table].attributes)))
             file.write(struct.pack('='+str(len_tbl)+'s'+str(len_pky)+'s', table.encode('utf-8'), self.tables[table].primary_key.encode('utf-8')))
-            print(3)
             for attr in self.tables[table].attributes:
                 len_name = len(attr.name)
                 file.write(struct.pack('=i'+str(len_name)+'s', len_name, attr.name.encode('utf-8')))   # name
@@ -75,7 +80,7 @@ class catalog_manager:
                     file.write(struct.pack('=i', 1))
                 elif attr.type == 'f': 
                     file.write(struct.pack('=i', 2))
-                elif attr.type[:-1] == 's': 
+                elif attr.type[-1:] == 's': 
                     file.write(struct.pack('=ii', 3, attr.length))
         file.close()
         # save indices
@@ -92,7 +97,6 @@ class catalog_manager:
         file.close()
     
     def __del__(self): 
-        self.save()
         print('del catalog_manager')
 
 
@@ -125,17 +129,20 @@ class catalog_manager:
 
     # raise an exception if the key does not exist in the table
     def key_not_exists(self, tbl_name, key):
-        for att in self.tables[tbl_name].attributes:
-            if key == att.name: 
+        self.table_not_exists(tbl_name)
+        for attr in self.tables[tbl_name].attributes:
+            if key == attr.name: 
                 return 
-        raise Exception("Key '%s' doesn't exist in table ''" % (key, tbl_name))
+        raise Exception("Key '%s' doesn't exist in table '%s'" % (key, tbl_name))
 
 
     # raise an exception if the key is not unique
     def key_not_unique(self, tbl_name, key):
-        if self.tables[tbl_name].attributes[key].uniqueness is False: 
-            raise Exception("The key '%s' is not unique" % key)
-
+        self.table_not_exists(tbl_name)
+        for attr in self.tables[tbl_name].attributes: 
+            if key == attr.name and attr.uniqueness is False: 
+                raise Exception("The key '%s' is not unique" % key)
+            
 
     # update the file & tables
     # assume that the values have been processed by the interpreter
@@ -150,6 +157,7 @@ class catalog_manager:
 
     # update the file & tables
     def drop_table(self, tbl_name):
+        self.table_not_exists(tbl_name)
         self.tables.pop(tbl_name)
         # file?
         print("Successfully drop table '%s'" % tbl_name)
@@ -165,11 +173,20 @@ class catalog_manager:
 
     # update the file & indices
     def drop_index(self, index_name):
+        self.index_not_exists(index_name)
         self.indices.pop(index_name)
         # the catalog file?
         print("Successfully drop index '%s'" % index_name)
 
 t = catalog_manager()
+print(t.tables)
+print(t.tables['abc'].attributes[0])
+print(t.tables['abc'].attributes[0].type)
+print(t.indices)
 t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
-t.drop_table('xyz')
+# t.drop_table('xyz')
+t.create_index('indexabc', 'abc', 'sid')
+t.create_index('index_xyz', 'xyz', 'sid')
+t.drop_index('indexabc')
+t.save()
