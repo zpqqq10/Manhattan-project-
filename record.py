@@ -81,7 +81,6 @@ class record_manager:
     # contraint list of tumples
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (==,4)
-
     def check_record(self,record,attr,constraint):
         for item in constraint:
             if item[1] == 0:
@@ -110,6 +109,7 @@ class record_manager:
                 else:
                     return False 
         return True
+    # this methods return the list of tuples corresponding to the constraints
     def scan_all(self,tbl_name,constraint, attr):
         f = open("./record/"+tbl_name+".rec", "rb+")
         bid = 0
@@ -133,9 +133,10 @@ class record_manager:
                     result.append(record)
                 idx += record_length_a
             bid = bid + 1
-        return result
-            
-
+        return result        
+    # domain : a list of tuples (bid,off)
+    def scan_with_index(self,tbl_name,constraint,attr,domain):
+        print(3)
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])
