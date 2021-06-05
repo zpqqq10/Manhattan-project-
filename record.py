@@ -128,15 +128,27 @@ class record_manager:
                 idx += 1
             while idx + record_length_a <= block_len:
                 record = struct.unpack(format,block_content[idx<<3:(idx<<3)+record_length_r])
-                print(record)
+                
                 if record[0] & self.check_record(record,attr,constraint):
                     result.append(record)
                 idx += record_length_a
             bid = bid + 1
         return result        
     # domain : a list of tuples (bid,off)
+    #(bid,off) should be valid, this methods will not check the correctness
     def scan_with_index(self,tbl_name,constraint,attr,domain):
-        print(3)
+        f = open("./record/"+tbl_name+".rec", "rb+")
+        result = []
+        format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
+        record_length_r = sum([i[2] for i in attr]) + 1
+        for item in domain:
+            f.seek(item[0] * 4096+ item[1] * 8)
+            content = f.read(record_length_r)
+            record = struct.unpack(format,content)
+            if record[0] & self.check_record(record,attr,constraint):
+                result.append(record)
+        return result
+            
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])
@@ -151,6 +163,7 @@ if __name__ == "__main__":
     t.delete_with_index("abc", 0, 3)
     t.delete_with_index("abc", 0, 1)
     print(t.scan_all("abc",[(0,2,2)], [("a", "l", 4), ("b", "l", 4)]))
+    print(t.scan_with_index("abc",[(0,2,2)], [("a", "l", 4), ("b", "l", 4)],[(0,7),(0,5)]))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27))
