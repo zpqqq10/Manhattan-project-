@@ -70,18 +70,34 @@ class index_manager():
                 keys.append(struct.unpack('='+type, cur_block[cur_offset:cur_offset+length]))
                 cur_offset += length
                 if type[-1:] == 's': 
-                    keys[-1].decode('utf-8')
-            if isleaf == False: 
+                    keys[-1] = keys[-1].decode('utf-8')
+            if isleaf == True: 
                 # read one more child
                 children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
             # find the value
-            # ....
+            if isleaf == True: 
+                # go deeper
+                if value >= keys[num-1]: 
+                    cur_bid = children[num][0]
+                elif value < keys[0]: 
+                    cur_bid = children[0][0]
+                else: 
+                    for i in range(num-1): 
+                        if value >= keys[i] and value < keys[i+1]: 
+                            cur_bid = children[i+1][0]
+                            break
+            else: 
+                # find the value and return its position
+                if value not in keys:
+                    raise Exception('The value is not in the table') 
+                else: 
+                    res_bid, res_offset = children[keys.index(value)]
+                    break
             keys = []
-            children =[]
+            children = []
+            cur_offset = 0
         
         return res_bid, res_offset
-
-
 
     def insert(key, addr): 
         pass
@@ -95,7 +111,16 @@ class index_manager():
     def merge(): 
         pass
 
-    def build_from_file(): 
+    def build_Bplus(): 
+        pass
+
+    def save_Bplus(): 
+        pass
+
+    def create_index():
+        pass
+
+    def drop_index():
         pass
 
 

@@ -96,8 +96,8 @@ class catalog_manager:
             file.write(struct.pack('='+str(len_key)+'s', self.indices[index][1].encode('utf-8')))   # name of key
         file.close()
     
-    def __del__(self): 
-        print('del catalog_manager')
+    # def __del__(self): 
+    #     print('del catalog_manager')
 
 
     # raise an exception if the table exists
