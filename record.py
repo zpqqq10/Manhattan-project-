@@ -114,7 +114,8 @@ class record_manager:
     def scan_all(self,tbl_name,constraint, attr):
         f = open("./record/"+tbl_name+".rec", "rb+")
         bid = 0
-        result = []
+        result_record = []
+        result_ptr = []
         format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
         record_length_r = sum([i[2] for i in attr]) + 1
         block_len = 4096 >>3
@@ -129,17 +130,19 @@ class record_manager:
                 idx += 1
             while idx + record_length_a <= block_len:
                 record = struct.unpack(format,block_content[idx<<3:(idx<<3)+record_length_r])
-                
                 if record[0] & self.check_record(record,attr,constraint):
-                    result.append(record)
+                    result_record.append(record[1:])
+                    result_ptr.append((bid,idx))
                 idx += record_length_a
             bid = bid + 1
+        result = (result_record,result_ptr)
         return result        
     # domain : a list of tuples (bid,off)
     #(bid,off) should be valid, this methods will not check the correctness
     def scan_with_index(self,tbl_name,constraint,attr,domain):
         f = open("./record/"+tbl_name+".rec", "rb+")
-        result = []
+        result_record = []
+        result_ptr = []
         format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
         record_length_r = sum([i[2] for i in attr]) + 1
         for item in domain:
@@ -147,8 +150,9 @@ class record_manager:
             content = f.read(record_length_r)
             record = struct.unpack(format,content)
             if record[0] & self.check_record(record,attr,constraint):
-                result.append(record)
-        return result
+                result_record.append(record[1:])
+                result_ptr.append(item)
+        return (result_record,result_ptr)
             
 if __name__ == "__main__":
     # test
@@ -156,16 +160,16 @@ if __name__ == "__main__":
     buffer = bufferManager()
     t = record_manager(buffer)
     t.create("abc", [("a", "l", 4), ("b", "l", 4)])
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
-    for i in range(10):
-        t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%10,(i+1)%10))
+    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
+    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
+    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
+    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
+    for i in range(600):
+        t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%100,(i+1)%100))
     t.delete_with_index("abc", 0, 3)
     t.delete_with_index("abc", 0, 1)
-    print(t.scan_all("abc",[(0,2,2)], [("a", "l", 4), ("b", "l", 4)]))
-    print(t.scan_with_index("abc",[(0,2,2)], [("a", "l", 4), ("b", "l", 4)],[(0,7),(0,5)]))
+    print(t.scan_all("abc",[(0,2,98)], [("a", "l", 4), ("b", "l", 4)]))
+    print(t.scan_with_index("abc",[(0,1,98)], [("a", "l", 4), ("b", "l", 4)],[(0,7),(0,5)]))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27))
