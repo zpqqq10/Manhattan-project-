@@ -1,12 +1,13 @@
 import struct
 import os
 import sys
+from buffer import bufferManager,bufferBlock
 from functools import reduce
 
 
 class record_manager:
-    def __init__(self):
-        print(1)
+    def __init__(self,buffer):
+        self.buffer_manager = buffer
 
     # attr here is teh format of struct
     def insert(self, tbl_name, attr, value):
@@ -152,7 +153,8 @@ class record_manager:
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])
-    t = record_manager()
+    buffer = bufferManager()
+    t = record_manager(buffer)
     t.create("abc", [("a", "l", 4), ("b", "l", 4)])
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
     # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
