@@ -9,7 +9,8 @@ max_timestamp = 10000000000000  # 14位，比全部的毫秒级13位时间戳更
 
 class bufferBlock():
     """
-    Variable Specification: file & file_bid: the data source; 
+    Variable Specification: 
+    file & file_bid: the data source; 
     modified: bool to identify
     """
 
@@ -22,6 +23,7 @@ class bufferBlock():
 
     def read(self, file_name, file_type, bid, off, length):
         """
+        Variable Specification: 
         file_name: the name(NOT included the file extension); 
         file_type: record(0) or index(1); 
         bid: block id of the file; 
@@ -54,6 +56,7 @@ class bufferBlock():
 
     def read_block(self, file_name, file_type, bid):
         """
+        Variable Specification: 
         file_name: the name(NOT included the file extension); 
         file_type: record(0) or index(1); 
         bid: block id of the file; 
@@ -79,24 +82,26 @@ class bufferBlock():
 
     def write(self, off, content, length):
         """
+        Variable Specification: 
         off: offset value of the needed data beginning position; 
         bid: block id of the file; 
         content: binary data
         """
-        # Q: 这里要不要做检测：1. content长是否为length; 2. content内容是否合法; 3. off + length是否超过上限
         self.modified = True
-        data = self.content[0:off] + content + content[off + length:]
+        data = self.content[0:off] + content + self.content[off + length:]
         self.content = data
         self.refreshTimestamp()
         return True
 
     def commit(self):
-        if self.modified == True:
-            file = open(self.file, "ab+")
-            file.seek(block_size*self.file_bid, 0)
+        if self.modified:
+            file = open(self.file, "rb+")
+            file.seek(block_size * self.file_bid, 0)
             file.write(self.content)
             file.close()
             self.modified = False
+            self.file = self.file_bid = None
+            self.content = None
         self.refreshTimestamp()
 
     def refreshTimestamp(self):
@@ -118,6 +123,7 @@ class bufferManager():
 
     def read(self, file_name, file_type, bid, off, length):
         """
+        Variable Specification: 
         file_name: the name(NOT included the file extension); 
         file_type: record(0) or index(1); bid: block id of the file; 
         off: offset value of the needed data beginning position ; 
@@ -143,6 +149,7 @@ class bufferManager():
 
     def read_block(self, file_name, file_type, bid):
         """
+        Variable Specification: 
         file_name: the name(NOT included the file extension); 
         file_type: record(0) or index(1); 
         bid: block id of the file; 
@@ -167,6 +174,7 @@ class bufferManager():
 
     def write(self, file_name, file_type, bid, off, content, length):
         """
+        Variable Specification: 
         off: offset value of the needed data beginning position; 
         bid: block id of the file; content: binary data
         """
@@ -193,5 +201,29 @@ class bufferManager():
             self.blockArray[i].commit()
 
 
-if __name__ == "__main__":
-    buffer = bufferManager()
+# if __name__ == "__main__":
+#     buffer = bufferManager()
+# testManager = bufferManager()
+# res = testManager.read_block("abc", 0, 0)
+# print(res)
+# res = testManager.read("abc", 0, 0, 0, 3)
+# print(res)
+# res = testManager.read_block("abc", 0, 1)
+# print(res)
+# content = b'\xff\xff\xff'
+# testManager.write("abc", 0, 0, 0, content, 3)
+# res = testManager.read_block("abc", 0, 0)
+# print(res)
+# res = testManager.read("abc", 0, 0, 0, 3)
+# print(res)
+# testManager.commitAll()
+# file = open("./record/abc.rec", "rb+")
+# file.seek(block_size*0, 0)
+# file.write(content)
+# file.close()
+# file = open("./record/abc.rec", "rb")
+# file.seek(block_size*0, 0)
+# content = file.read(block_size)
+# print(content)
+# file.close()
+
