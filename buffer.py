@@ -39,6 +39,7 @@ class bufferBlock():
         # print(self.content)
         # print(result)
         # debug code end
+        file.close()
         return result
 
     def read_block(self, file_name, file_type, bid):
@@ -59,6 +60,7 @@ class bufferBlock():
         self.file = path
         self.file_bid = bid
         self.refreshTimestamp()
+        file.close()
         return self.content
 
     def write(self, off, content, length):
