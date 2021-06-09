@@ -9,7 +9,7 @@ class record_manager:
     def __init__(self,buffer):
         self.buffer_manager = buffer
 
-    # attr here is teh format of struct
+    # attr here is the format of struct
     def insert(self, tbl_name, attr, value):
         # temporarily use file open, lately will use buffer
         f = open("./record/"+tbl_name+".rec", "rb+")

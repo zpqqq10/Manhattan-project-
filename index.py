@@ -40,19 +40,17 @@ class Node():
         raise Exception('The key has no position to place')
 
 class index_manager():
-    def __init__(self, order, buffer_manager):
-        self.root = Node(); 
-        # order = (4096-4-1-2) // (length of key + 4) + 1
+    def __init__(self, buffer_manager):
+        self.roots = {}
+        self.orders = {}
         # 1 is for a bool variable 'isleaf'
         # 2 is for the number of keys in a certain node
-        self.order = order
         self.buffer_manager = buffer_manager
     
 
     # length: the length of the key attribute
     # value:  the value to be found
     def search(self, name, value, type, length):
-        path = './index/' + name +'idx'
         keys = []
         children = []
         cur_bid = cur_offset = 0
@@ -61,7 +59,7 @@ class index_manager():
         num = 0     # number of keys in this block
         while True: 
             # build a node
-            cur_block = self.buffer_manager.read_block(path, cur_bid)
+            cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
             isleaf, num = struct.unpack('=?h', cur_block[:3])
             cur_offset = 3
             for i in range(num): 
@@ -99,20 +97,40 @@ class index_manager():
         
         return res_bid, res_offset
 
-    def insert(key, addr): 
+    def __search_leaf(self, node, value): 
+        # a leaf
+        if node.is_leaf() is True: 
+            return node
+
+        # not a leaf
+        for i in range(len(node.keys)):
+            if value < node.keys[i]: 
+                break 
+        
+        # recursively search
+        if value < node.keys[i]:
+            return self.__search_leaf(node.children[i], value)
+        else:  
+            return self.__search_leaf(node.children[i], value)
+
+    def __insert(self, root, address, value, order): 
         pass
 
-    def remove(key):
+    def __remove(self):
         pass
 
-    def split(): 
+    def __split(): 
         pass
 
-    def merge(): 
+    def __merge(): 
         pass
 
-    def build_Bplus(): 
-        pass
+    def build_Bplus(self, index_name, addresses, values, order): 
+        # order = (4096-4-1-2) // (length of key + 4) + 1
+        self.orders[index_name] = order
+        self.roots[index_name] = Node() 
+        for i in range(len(values)): 
+            self.__insert(self.roots[index_name], addresses[i], values[i], order)
 
     def save_Bplus(): 
         pass
