@@ -1,15 +1,16 @@
 import struct
-import minisql.catalog as catalog
+import buffer as buffer
 
 class Node():
-    def __init__(self, isleaf = False):
+    def __init__(self, isleaf = False, parent = None):
         self.keys = []
         self.children = []
         self.isleaf = isleaf
+        self.parent = parent
 
     # to tell whether a split or a merge is necessary
     def poor(self, order): 
-        return len(self.keys) < order // 2 +1
+        return len(self.keys) < order // 2
 
     def is_leaf(self): 
         return self.isleaf
@@ -19,11 +20,11 @@ class Node():
 
     # children
     def is_full(self, order): 
-        return len(self.children) >= order
+        return len(self.children) > order
 
     def index_of_insert(self, key): 
         # insert at keys[0]
-        if self.is_empty or key<self.keys[0]: 
+        if self.is_empty() or key<self.keys[0]: 
             return 0
         
         # isnert at the last position
@@ -43,8 +44,6 @@ class index_manager():
     def __init__(self, buffer_manager):
         self.roots = {}
         self.orders = {}
-        # 1 is for a bool variable 'isleaf'
-        # 2 is for the number of keys in a certain node
         self.buffer_manager = buffer_manager
     
 
@@ -69,9 +68,9 @@ class index_manager():
                 cur_offset += length
                 if type[-1:] == 's': 
                     keys[-1] = keys[-1].decode('utf-8')
-            if isleaf == True: 
-                # read one more child
-                children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+            # read one more child
+            # for a leaf node, the last child is the pointer to the next leaf 
+            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
             # find the value
             if isleaf == True: 
                 # go deeper
@@ -103,23 +102,75 @@ class index_manager():
             return node
 
         # not a leaf
+        k = 0
         for i in range(len(node.keys)):
             if value < node.keys[i]: 
+                k = i
                 break 
         
+        print(k)
         # recursively search
-        if value < node.keys[i]:
+        if value < node.keys[k]:
             return self.__search_leaf(node.children[i], value)
         else:  
-            return self.__search_leaf(node.children[i], value)
+            return self.__search_leaf(node.children[i+1], value)
 
-    def __insert(self, root, address, value, order): 
-        pass
+    def __insert(self, index_name, address, value, order): 
+        root = self.roots[index_name]
+        leaf = self.__search_leaf(root, value)
+
+        index = leaf.index_of_insert(value)
+        leaf.keys.insert(index, value)
+        leaf.children.insert(index, address)
+
+        # fix up the node that is inserted
+        self.__fixup(index_name, leaf, order)
+
+    def __fixup(self, index_name, node, order): 
+        if node.is_full(order): 
+            # a new root needs to be created
+            if node.parent == None: 
+                self.roots[index_name] = newroot = Node()
+                node.parent = newroot
+                newkey, lchild, rchild = self.__split(node, order)
+                newroot.keys.append(newkey)
+                newroot.children.append(lchild)
+                newroot.children.append(rchild)
+            else :
+                # not a root
+                parent = node.parent
+                newkey, lchild, rchild = self.__split(node, order)
+                index = parent.index_of_insert(newkey)
+                parent.keys.insert(index, newkey)
+                parent.children.insert(index+1, rchild)
+                self.__fixup(index_name, parent, order)
+        else :
+            return
+
+
+    def __split(self, node, order): 
+        half = order // 2
+        # a leaf
+        if node.is_leaf(): 
+            newnode = Node(True, node.parent)
+            newnode.keys = node.keys[half:]
+            newnode.children = node.children[half:]
+            newkey = node.keys[half]
+            node.keys = node.keys[:half]
+            node.children = node.children[:half] # pointer to the next leaf
+            node.children.append(newnode)
+        # internal node
+        else :
+            newnode = Node(False, node.parent)
+            newnode.keys = node.keys[half+1:]
+            newnode.children = node.children[half+1:]
+            newkey = node.keys[half]
+            node.keys = node.keys[:half]
+            node.children = node.children[:half+1]
+
+        return newkey, node, newnode
 
     def __remove(self):
-        pass
-
-    def __split(): 
         pass
 
     def __merge(): 
@@ -127,10 +178,13 @@ class index_manager():
 
     def build_Bplus(self, index_name, addresses, values, order): 
         # order = (4096-4-1-2) // (length of key + 4) + 1
+        # 1 is for a bool variable 'isleaf'
+        # 2 is for the number of keys in a certain node
         self.orders[index_name] = order
-        self.roots[index_name] = Node() 
+        self.roots[index_name] = Node(True, None) 
+        self.roots[index_name].children.append(None)
         for i in range(len(values)): 
-            self.__insert(self.roots[index_name], addresses[i], values[i], order)
+            self.__insert(index_name, addresses[i], values[i], order)
 
     def save_Bplus(): 
         pass
@@ -141,28 +195,29 @@ class index_manager():
     def drop_index():
         pass
 
+    def print_tree(self, index_name): 
+        stack = []
+        stack.append([self.roots[index_name], 1])
+        while len(stack) != 0: 
+            node, level = stack[0]
+            del stack[0]
+            if not node.is_leaf(): 
+                for child in node.children: 
+                    stack.append([child, level+1])
+            print('level: ', level)
+            print('is_leaf: ', node.isleaf)
+            print(node.keys)
+            print('--------------')
 
-# # attribute[0] = value of key
-# # attribute[1] = address
-# def create_index(index_name, table_name, key, attribute): 
-#     catalog.table_not_exists(table_name)    # check if the table exists
-#     catalog.index_exists(index_name)    # check duplicate index
-#     new_index = Bplus()
-#     for attr in attribute: 
-#         new_index.insert(attr[0], attr[1])
-#     catalog.create_index(index_name, table_name, key)   # add inofrmation to catalog
-    
 
-# def drop_index(index_name): 
-#     catalog.index_not_exists(index_name)    # check if the index exists
-#     # remove the corresponding index file
-#     catalog.drop_index(index_name)
-
-# def access_by_index():  # limit?
-#     pass
-
-# def update_index_insert(index_name, attribute): 
-#     pass
-
-# def update_index_remove(index_name, attribute): 
-#     pass
+if __name__ == '__main__': 
+    buffer_m = buffer.bufferManager()
+    manager = index_manager(buffer_m) 
+    index_name = 'test'
+    # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24, 70, 55, 17, 31, 77, 27, 61, 20]
+    values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
+    addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
+                 [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
+    # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7]]
+    manager.build_Bplus(index_name, addresses, values, 4)
+    manager.print_tree(index_name)
