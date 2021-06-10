@@ -4,6 +4,13 @@ import sys
 import struct
 import buffer as buffer
 
+'''
+To maintain the index, we decided to directly abandon the historical version of the index and
+rebuild the index. For a table of small scale, the time of rebuilding is acceptable. For a table of
+large scale, we believe that the usual case is the many records are added or deleted together and it is 
+better to rebuild the index
+'''
+
 class Node():
     def __init__(self, isleaf = False, parent = None):
         self.keys = []
@@ -13,8 +20,8 @@ class Node():
         self.parent = parent
 
     # to tell whether a split or a merge is necessary
-    def poor(self, order): 
-        return len(self.keys) < order // 2
+    def is_poor(self, order): 
+        return len(self.children) < order // 2
 
     def is_leaf(self): 
         return self.isleaf
@@ -50,7 +57,6 @@ class index_manager():
         self.orders = {}
         self.buffer_manager = buffer_manager
     
-
     # length: the length of the key attribute
     # value:  the value to be found
     def search(self, name, value, type, length):
@@ -155,7 +161,6 @@ class index_manager():
         else :
             return
 
-
     def __split(self, node, order): 
         half = order // 2
         # a leaf
@@ -178,10 +183,10 @@ class index_manager():
 
         return newkey, node, newnode
 
-    def __remove(self):
+    def __remove(self, index_name, value):
         pass
 
-    def __merge(): 
+    def __merge(self): 
         pass
 
     def build_Bplus(self, index_name, addresses, values, order): 
@@ -257,7 +262,6 @@ class index_manager():
                 self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                 self.buffer_manager.commitOne(index_name, 1, bid)
 
-
     def create_index(self, index_name, addresses, values, order):
         self.build_Bplus(index_name, addresses, values, order)
         self.print_tree(index_name)
@@ -291,24 +295,27 @@ class index_manager():
             if index_names[i] in self.roots.keys(): 
                 self.save_Bplus(index_names[i], types[i], lengths[i])
 
-if __name__ == '__main__': 
-    buffer_m = buffer.bufferManager()
-    manager = index_manager(buffer_m) 
-    index_name = 'test'
-    # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24, 70, 55, 17, 31, 77, 27, 61, 20]
-    values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
-    addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
-                 [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
-    # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7]]
-    manager.create_index(index_name, addresses, values, 4)
-    index_name = 'tt'
-    values = ['aaa', 'cde', 'xhice', 'xsc', 'hidcu', 'xhsayi', 'xui', 'chausi']
-    addresses = [[40, 6], [21, 8], [6, 6], [16, 23], [37, 21], [5, 24], [17, 3], [34, 22]]
-    manager.create_index(index_name, addresses, values, 4)
-    index_names = ['test', 'tt']
-    types = ['i', '10s']
-    lengths = [4, 10]
-    manager.saveAll(index_names, types, lengths)
-    print(manager.search('test', 196, 'i', 4))
-    print(manager.search('tt', 'xsc', '10s', 10))
-    print(manager.search('tt', 'xxx', '10s', 10))
+    def build_from_file(self, index_name):
+        pass 
+
+# if __name__ == '__main__': 
+#     buffer_m = buffer.bufferManager()
+#     manager = index_manager(buffer_m) 
+#     index_name = 'test'
+#     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24, 70, 55, 17, 31, 77, 27, 61, 20]
+#     values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
+#     addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
+#                  [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
+#     # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7]]
+#     manager.create_index(index_name, addresses, values, 4)
+#     index_name = 'tt'
+#     values = ['aaa', 'cde', 'xhice', 'xsc', 'hidcu', 'xhsayi', 'xui', 'chausi']
+#     addresses = [[40, 6], [21, 8], [6, 6], [16, 23], [37, 21], [5, 24], [17, 3], [34, 22]]
+#     manager.create_index(index_name, addresses, values, 4)
+#     index_names = ['test', 'tt']
+#     types = ['i', '10s']
+#     lengths = [4, 10]
+#     manager.saveAll(index_names, types, lengths)
+#     print(manager.search('test', 196, 'i', 4))
+#     print(manager.search('tt', 'xsc', '10s', 10))
+#     print(manager.search('tt', 'xxx', '10s', 10))
