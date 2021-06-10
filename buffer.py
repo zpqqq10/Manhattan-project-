@@ -102,7 +102,7 @@ class bufferBlock():
             self.modified = False
             self.file = self.file_bid = None
             self.content = None
-        self.timestamp = max_timestamp
+        self.timestamp = 0
 
     def refreshTimestamp(self):
         self.timestamp = int(round(time.time() * 1000))
