@@ -9,20 +9,21 @@ class record_manager:
     def __init__(self,buffer):
         self.buffer_manager = buffer
 
-    # attr here is the format of struct
+    """
+    tbl_name: the name of the table
+    attr    : the list of the attribute tuple
+    value   : the tuple of value inserted
+    """
     def insert(self, tbl_name, attr, value):
         # temporarily use file open, lately will use buffer
-        f = open("./record/"+tbl_name+".rec", "rb+")
-        bytes = f.read(8)
-        # buffer.read(tbl_name,0,0,8)
+        bytes = self.buffer_manager.read(tbl_name,0,0,0,8)
         valid_bytes, free_bid, free_off, tail_flag, length = struct.unpack(
             "=?hh?h", bytes)
         if tail_flag == False:
             # wirte the record in free_bid:free_off
-            f.seek(free_bid * 4096 + free_off * 8, 0)
             # if the free record is not the tail, get the first bytes which record the pre free list head
-            pre_free_list = f.read(6)
-            # buffer.read(tbl_name,free_bid,free_off,6)
+            
+            pre_free_list = self.buffer_manager.read(tbl_name,0,free_bid,free_off << 3,6)
 
         length_ = sum([i[2] for i in attr]) + 1
         pad_num = (length << 3) - length_
@@ -30,9 +31,7 @@ class record_manager:
                                                                      y: struct.pack(x[1], y), attr, value))
         bytes += pad_num * struct.pack("=x")
         # wirte the record in free_bid:free_off
-        f.seek(free_bid * 4096 + free_off * 8, 0)
-        f.write(bytes)
-        # buffer.write(tbl_name,free_bid,free_off,length << 3,bytes)
+        self.buffer_manager.write(tbl_name,0,free_bid,free_off << 3,bytes,length << 3)
         if tail_flag:
             # compute the next free record
             next_free_bid = free_bid
@@ -40,28 +39,21 @@ class record_manager:
             if (4096 - next_free_off * 8 ) < length * 8:
                 next_free_bid = free_bid + 1
                 next_free_off = 0
-            # print(next_free_bid,next_free_off,new_off)
             bytes = struct.pack(
                 "=?hh?", False, next_free_bid, next_free_off, True)
         else:
             bytes = pre_free_list
-        f.seek(0, 0)
-        f.write(bytes)
-        f.close()
-        return (free_bid,free_off)
-        # buffer.write(tbl_name,0,0,bytes,6)
+        self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
+        return (free_bid,free_off << 3)
+        
 
     def delete_with_index(self, tbl_name, bid, off):
         # temporarily use file open, lately will use buffer
-        f = open("./record/"+tbl_name+".rec", "rb+")
-        free_list = f.read(6)                           # read the free_list
-        f.seek(bid * 4096 + off * 8, 0)
-        f.write(free_list)
-        # buffer.write(tbl_name,bid,off,free_list,6)
-        bytes = struct.pack("=?hh?", False, bid, off, False)
-        f.seek(0, 0)
-        f.write(bytes)
-        f.close()
+        # read the free_list
+        free_list = self.buffer_manager.read(tbl_name,0,0,0,6)
+        self.buffer_manager.write(tbl_name,0,bid,off,free_list,6)
+        bytes = struct.pack("=?hh?", False, bid, off >> 3, False)
+        self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
 
     def create(self, tbl_name, attr):
         # the header of a record file, every record align to 8
@@ -112,42 +104,40 @@ class record_manager:
         return True
     # this methods return the list of tuples corresponding to the constraints
     def scan_all(self,tbl_name,constraint, attr):
-        f = open("./record/"+tbl_name+".rec", "rb+")
+        # f = open("./record/"+tbl_name+".rec", "rb+")
         bid = 0
         result_record = []
         result_ptr = []
         format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
         record_length_r = sum([i[2] for i in attr]) + 1
-        block_len = 4096 >>3
-        while block_len == 512:
-            #content = buffer.read_block(tbl_name,bid)
-            block_content = f.read(4096)
+        block_len = 4096
+        while block_len == 4096:
+            # block_content = f.read(4096)
+            block_content = self.buffer_manager.read_block(tbl_name,0,bid)
             block_len = len(block_content)
-            block_len = block_len >> 3
             idx = 0
             if bid==0:
                 valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack("=?hh?h", block_content[:8])
-                idx += 1
-            while idx + record_length_a <= block_len:
-                record = struct.unpack(format,block_content[idx<<3:(idx<<3)+record_length_r])
+                idx += 8
+            while idx + record_length_a * 8 <= block_len:
+                record = struct.unpack(format,block_content[idx:idx+record_length_r])
                 if record[0] & self.check_record(record,attr,constraint):
                     result_record.append(record[1:])
                     result_ptr.append((bid,idx))
-                idx += record_length_a
+                idx += record_length_a*8
             bid = bid + 1
         result = (result_record,result_ptr)
         return result        
     # domain : a list of tuples (bid,off)
     #(bid,off) should be valid, this methods will not check the correctness
     def scan_with_index(self,tbl_name,constraint,attr,domain):
-        f = open("./record/"+tbl_name+".rec", "rb+")
+        # f = open("./record/"+tbl_name+".rec", "rb+")
         result_record = []
         result_ptr = []
         format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
         record_length_r = sum([i[2] for i in attr]) + 1
         for item in domain:
-            f.seek(item[0] * 4096+ item[1] * 8)
-            content = f.read(record_length_r)
+            content = self.buffer_manager.read(tbl_name,0,item[0],item[1],record_length_r)
             record = struct.unpack(format,content)
             if record[0] & self.check_record(record,attr,constraint):
                 result_record.append(record[1:])
@@ -160,16 +150,16 @@ if __name__ == "__main__":
     buffer = bufferManager()
     t = record_manager(buffer)
     t.create("abc", [("a", "l", 4), ("b", "l", 4)])
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
-    t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8)))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
     for i in range(600):
         t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%100,(i+1)%100))
-    t.delete_with_index("abc", 0, 3)
-    t.delete_with_index("abc", 0, 1)
+    t.delete_with_index("abc", 0, 8)
+    t.delete_with_index("abc", 0, 24)
     print(t.scan_all("abc",[(0,2,98)], [("a", "l", 4), ("b", "l", 4)]))
-    print(t.scan_with_index("abc",[(0,1,98)], [("a", "l", 4), ("b", "l", 4)],[(0,7),(0,5)]))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7))
-    # t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27))
+    print(t.scan_with_index("abc",[(0,1,98)], [("a", "l", 4), ("b", "l", 4)],[(0,8),(0,24)]))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
+    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27)))
+    t.buffer_manager.commitAll()
