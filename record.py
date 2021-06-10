@@ -10,9 +10,10 @@ class record_manager:
         self.buffer_manager = buffer
 
     """
-    tbl_name: the name of the table
-    attr    : the list of the attribute tuple
-    value   : the tuple of value inserted
+    tbl_name        : the name of the table
+    attr            : the list of the attribute tuple
+    value           : the tuple of value inserted
+    return value    : the tuple (bid,off)  indicates the position the new record inserted
     """
     def insert(self, tbl_name, attr, value):
         # temporarily use file open, lately will use buffer
@@ -46,7 +47,12 @@ class record_manager:
         self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
         return (free_bid,free_off << 3)
         
-
+    """
+    tbl_name        : the name of the table
+    bid             : the bid of the record need to be delete
+    off             : the offset of the record in the block
+    return value    : none 
+    """
     def delete_with_index(self, tbl_name, bid, off):
         # temporarily use file open, lately will use buffer
         # read the free_list
@@ -54,7 +60,11 @@ class record_manager:
         self.buffer_manager.write(tbl_name,0,bid,off,free_list,6)
         bytes = struct.pack("=?hh?", False, bid, off >> 3, False)
         self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
-
+    """
+    tbl_name        : the name of the table
+    attr            : the list of the attribute tuple
+    return value    : none
+    """
     def create(self, tbl_name, attr):
         # the header of a record file, every record align to 8
         # 0             the bool the valid byte
@@ -71,7 +81,13 @@ class record_manager:
             f.write(content)
             f.close()
         return 0
-    # contraint list of tumples
+    """
+    record          : the tuple of record 
+    attr            : the list of the attribute tuple
+    constraint      : the constraint list of tuples
+    return value    : True if the record match the constraint
+    """
+    # constraint list of tuples
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (==,4)
     def check_record(self,record,attr,constraint):
@@ -103,8 +119,13 @@ class record_manager:
                     return False 
         return True
     # this methods return the list of tuples corresponding to the constraints
+    """
+    tbl_name        : the name of the table
+    constraint      : the constraint list of tuples
+    attr            : the list of the attribute tuple 
+    return value    : a tuple of two result list: list of the record value and list of the position of record 
+    """
     def scan_all(self,tbl_name,constraint, attr):
-        # f = open("./record/"+tbl_name+".rec", "rb+")
         bid = 0
         result_record = []
         result_ptr = []
@@ -112,7 +133,6 @@ class record_manager:
         record_length_r = sum([i[2] for i in attr]) + 1
         block_len = 4096
         while block_len == 4096:
-            # block_content = f.read(4096)
             block_content = self.buffer_manager.read_block(tbl_name,0,bid)
             block_len = len(block_content)
             idx = 0
@@ -130,8 +150,14 @@ class record_manager:
         return result        
     # domain : a list of tuples (bid,off)
     #(bid,off) should be valid, this methods will not check the correctness
+    """
+    tbl_name        : the name of the table
+    constraint      : the constraint list of tuples
+    attr            : the list of the attribute tuple 
+    domain          : the list of the position of the record need to be scanned
+    return value    : a tuple of two result list: list of the record value and list of the position of record 
+    """
     def scan_with_index(self,tbl_name,constraint,attr,domain):
-        # f = open("./record/"+tbl_name+".rec", "rb+")
         result_record = []
         result_ptr = []
         format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
