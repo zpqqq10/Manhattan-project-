@@ -102,7 +102,7 @@ class bufferBlock():
             self.modified = False
             self.file = self.file_bid = None
             self.content = None
-        self.refreshTimestamp()
+        self.timestamp = max_timestamp
 
     def refreshTimestamp(self):
         self.timestamp = int(round(time.time() * 1000))
@@ -199,6 +199,24 @@ class bufferManager():
     def commitAll(self):
         for i in range(max_page):
             self.blockArray[i].commit()
+
+    def commitOne(self, file_name, file_type, bid): 
+        if (file_type == 0):
+            path = "./record/" + file_name + ".rec"
+        else:
+            path = "./index/" + file_name + ".ind"
+        findFlag = False
+        target = None
+        for i in range(max_page):
+            if self.blockArray[i].file == path and self.blockArray[i].file_bid == bid:
+                findFlag = True
+                target = self.blockArray[i]
+                break
+        if findFlag: # the block is found
+            target.commit()
+        else : 
+            raise Exception('No such block')
+
 
 
 # if __name__ == "__main__":

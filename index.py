@@ -1,10 +1,14 @@
 import struct
+import os
+import sys
+import struct
 import buffer as buffer
 
 class Node():
     def __init__(self, isleaf = False, parent = None):
         self.keys = []
         self.children = []
+        self.bid = 0
         self.isleaf = isleaf
         self.parent = parent
 
@@ -64,7 +68,8 @@ class index_manager():
             for i in range(num): 
                 children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
                 cur_offset += 4
-                keys.append(struct.unpack('='+type, cur_block[cur_offset:cur_offset+length]))
+                key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
+                keys.append(key)
                 cur_offset += length
                 if type[-1:] == 's': 
                     keys[-1] = keys[-1].decode('utf-8')
@@ -72,7 +77,7 @@ class index_manager():
             # for a leaf node, the last child is the pointer to the next leaf 
             children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
             # find the value
-            if isleaf == True: 
+            if isleaf == False: 
                 # go deeper
                 if value >= keys[num-1]: 
                     cur_bid = children[num][0]
@@ -85,7 +90,8 @@ class index_manager():
                             break
             else: 
                 # find the value and return its position
-                if value not in keys:
+                # the last child is the pointer
+                if value not in keys[:num]:
                     raise Exception('The value is not in the table') 
                 else: 
                     res_bid, res_offset = children[keys.index(value)]
@@ -108,7 +114,6 @@ class index_manager():
                 k = i
                 break 
         
-        print(k)
         # recursively search
         if value < node.keys[k]:
             return self.__search_leaf(node.children[i], value)
@@ -177,7 +182,7 @@ class index_manager():
         pass
 
     def build_Bplus(self, index_name, addresses, values, order): 
-        # order = (4096-4-1-2) // (length of key + 4) + 1
+        # order = (4096-2-1-2) // (length of key + 2) + 1
         # 1 is for a bool variable 'isleaf'
         # 2 is for the number of keys in a certain node
         self.orders[index_name] = order
@@ -186,8 +191,63 @@ class index_manager():
         for i in range(len(values)): 
             self.__insert(index_name, addresses[i], values[i], order)
 
-    def save_Bplus(): 
-        pass
+    def save_Bplus(self, index_name, type, length): 
+        os.chdir(sys.path[0])
+        # clear the previous index
+        file = open('./index/'+index_name+'.ind', 'wb')
+        file.close()
+        stack = []
+        stack.append(self.roots[index_name])
+        while len(stack) != 0: 
+            node = stack[0]
+            del stack[0]
+            bid = node.bid
+            # not a leaf
+            if not node.is_leaf(): 
+                for child in node.children: 
+                    stack.append(child)
+                # go to corresponding block
+                # self.buffer_manager.read_block(index_name, 1, bid)
+                print(node.keys)
+                num = len(node.keys)  # number of keys
+                cur_offset = 0
+                content = struct.pack('=?h', node.isleaf, num)
+                self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 3)
+                cur_offset += 3
+                for i in range(num): 
+                    content = struct.pack('=hh', node.children[i].bid, 0)
+                    self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
+                    cur_offset += 4
+                    content = struct.pack('='+type, node.keys[i])
+                    self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
+                    cur_offset += length
+                # add the last pointer
+                content = struct.pack('=hh', node.children[num].bid, 0)
+                self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
+                self.buffer_manager.commitOne(index_name, 1, bid)
+            # a leaf
+            else :
+                print(node.keys)
+                num = len(node.keys)  # number of keys
+                cur_offset = 0
+                content = struct.pack('=?h', node.isleaf, num)
+                self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 3)
+                cur_offset += 3
+                for i in range(num): 
+                    content = struct.pack('=hh', node.children[i][0], node.children[i][1])
+                    self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
+                    cur_offset += 4
+                    content = struct.pack('='+type, node.keys[i])
+                    self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
+                    cur_offset += length
+                # add the last pointer
+                if node.children[num] is None: 
+                    content = struct.pack('=hh', -1, -1)
+                else: 
+                    content = struct.pack('=hh', node.children[num].bid, 0)
+                self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
+                self.buffer_manager.commitOne(index_name, 1, bid)
+
 
     def create_index():
         pass
@@ -197,16 +257,20 @@ class index_manager():
 
     def print_tree(self, index_name): 
         stack = []
+        bid = 0
         stack.append([self.roots[index_name], 1])
         while len(stack) != 0: 
             node, level = stack[0]
+            node.bid = bid
+            bid += 1
             del stack[0]
             if not node.is_leaf(): 
                 for child in node.children: 
                     stack.append([child, level+1])
             print('level: ', level)
             print('is_leaf: ', node.isleaf)
-            print(node.keys)
+            print('bid: ', node.bid)
+            print('keys: ', node.keys)
             print('--------------')
 
 
@@ -221,3 +285,5 @@ if __name__ == '__main__':
     # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7]]
     manager.build_Bplus(index_name, addresses, values, 4)
     manager.print_tree(index_name)
+    manager.save_Bplus(index_name, 'i', 4)
+    print(manager.search(index_name, 33, 'i', 4))
