@@ -1,9 +1,5 @@
 Created by PLY version 3.11 (http://www.dabeaz.com/ply)
 
-Unused terminals:
-
-    SET
-
 Grammar
 
 Rule 0     S' -> expressions
@@ -16,43 +12,48 @@ Rule 6     exp_select -> SELECT columns FROM COLUMN END
 Rule 7     exp_select -> SELECT STAR FROM COLUMN END
 Rule 8     exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END
 Rule 9     exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END
-Rule 10    exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END
-Rule 11    exp_insert -> INSERT INTO COLUMN exp_insert_end
-Rule 12    exp_condition -> COLUMN OP COLUMN
-Rule 13    exp_condition -> COLUMN OP COLUMN AND exp_condition
-Rule 14    exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END
-Rule 15    exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
-Rule 16    columns -> COLUMN
-Rule 17    columns -> COLUMN COMMA columns
+Rule 10    exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
+Rule 11    exp_attribute -> COLUMN TYPE
+Rule 12    exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH
+Rule 13    exp_attribute -> COLUMN TYPE COMMA exp_attribute
+Rule 14    exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+Rule 15    exp_insert -> INSERT INTO COLUMN exp_insert_end
+Rule 16    exp_condition -> COLUMN OP COLUMN
+Rule 17    exp_condition -> COLUMN OP COLUMN AND exp_condition
+Rule 18    exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END
+Rule 19    exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+Rule 20    columns -> COLUMN
+Rule 21    columns -> COLUMN COMMA columns
 
 Terminals, with rules where they appear
 
-AND                  : 13
-COLUMN               : 6 7 8 9 10 11 12 12 13 13 16 17
-COMMA                : 17
+AND                  : 17
+COLUMN               : 6 7 8 9 10 11 12 12 13 14 14 15 16 16 17 17 20 21
+COMMA                : 13 14 21
 CREATE               : 10
-END                  : 6 7 8 9 10 14 15
+END                  : 6 7 8 9 10 18 19
 FROM                 : 6 7 8 9
-INSERT               : 11
-INTO                 : 11
-LFPARENTH            : 10 14 15 15
-OP                   : 12 13
-RGPARENTH            : 10 14 15 15
+INSERT               : 15
+INTO                 : 15
+LFPARENTH            : 10 12 14 18 19 19
+OP                   : 16 17
+RGPARENTH            : 10 12 14 18 19 19
 SELECT               : 6 7 8 9
-SET                  : 
 STAR                 : 7 8
 TABLE                : 10
-VALUES               : 14 15
+TYPE                 : 11 12 13 14
+VALUES               : 18 19
 WHERE                : 8 9
 error                : 
 
 Nonterminals, with rules where they appear
 
-columns              : 6 9 10 14 15 15 17
-exp_condition        : 8 9 13
+columns              : 6 9 18 19 19 21
+exp_attribute        : 10 13 14
+exp_condition        : 8 9 17
 exp_create           : 4
 exp_insert           : 5
-exp_insert_end       : 11
+exp_insert_end       : 15
 exp_select           : 3
 expression           : 1 2
 expressions          : 2 0
@@ -71,8 +72,8 @@ state 0
     (7) exp_select -> . SELECT STAR FROM COLUMN END
     (8) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
     (9) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
-    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END
-    (11) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
+    (15) exp_insert -> . INSERT INTO COLUMN exp_insert_end
 
     SELECT          shift and go to state 6
     CREATE          shift and go to state 7
@@ -95,8 +96,8 @@ state 1
     (7) exp_select -> . SELECT STAR FROM COLUMN END
     (8) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
     (9) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
-    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END
-    (11) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
+    (15) exp_insert -> . INSERT INTO COLUMN exp_insert_end
 
     SELECT          shift and go to state 6
     CREATE          shift and go to state 7
@@ -153,8 +154,8 @@ state 6
     (7) exp_select -> SELECT . STAR FROM COLUMN END
     (8) exp_select -> SELECT . STAR FROM COLUMN WHERE exp_condition END
     (9) exp_select -> SELECT . columns FROM COLUMN WHERE exp_condition END
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
+    (20) columns -> . COLUMN
+    (21) columns -> . COLUMN COMMA columns
 
     STAR            shift and go to state 12
     COLUMN          shift and go to state 11
@@ -163,14 +164,14 @@ state 6
 
 state 7
 
-    (10) exp_create -> CREATE . TABLE COLUMN LFPARENTH columns RGPARENTH END
+    (10) exp_create -> CREATE . TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
 
     TABLE           shift and go to state 13
 
 
 state 8
 
-    (11) exp_insert -> INSERT . INTO COLUMN exp_insert_end
+    (15) exp_insert -> INSERT . INTO COLUMN exp_insert_end
 
     INTO            shift and go to state 14
 
@@ -195,11 +196,11 @@ state 10
 
 state 11
 
-    (16) columns -> COLUMN .
-    (17) columns -> COLUMN . COMMA columns
+    (20) columns -> COLUMN .
+    (21) columns -> COLUMN . COMMA columns
 
-    FROM            reduce using rule 16 (columns -> COLUMN .)
-    RGPARENTH       reduce using rule 16 (columns -> COLUMN .)
+    FROM            reduce using rule 20 (columns -> COLUMN .)
+    RGPARENTH       reduce using rule 20 (columns -> COLUMN .)
     COMMA           shift and go to state 16
 
 
@@ -213,14 +214,14 @@ state 12
 
 state 13
 
-    (10) exp_create -> CREATE TABLE . COLUMN LFPARENTH columns RGPARENTH END
+    (10) exp_create -> CREATE TABLE . COLUMN LFPARENTH exp_attribute RGPARENTH END
 
     COLUMN          shift and go to state 18
 
 
 state 14
 
-    (11) exp_insert -> INSERT INTO . COLUMN exp_insert_end
+    (15) exp_insert -> INSERT INTO . COLUMN exp_insert_end
 
     COLUMN          shift and go to state 19
 
@@ -235,9 +236,9 @@ state 15
 
 state 16
 
-    (17) columns -> COLUMN COMMA . columns
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
+    (21) columns -> COLUMN COMMA . columns
+    (20) columns -> . COLUMN
+    (21) columns -> . COLUMN COMMA columns
 
     COLUMN          shift and go to state 11
 
@@ -253,16 +254,16 @@ state 17
 
 state 18
 
-    (10) exp_create -> CREATE TABLE COLUMN . LFPARENTH columns RGPARENTH END
+    (10) exp_create -> CREATE TABLE COLUMN . LFPARENTH exp_attribute RGPARENTH END
 
     LFPARENTH       shift and go to state 23
 
 
 state 19
 
-    (11) exp_insert -> INSERT INTO COLUMN . exp_insert_end
-    (14) exp_insert_end -> . VALUES LFPARENTH columns RGPARENTH END
-    (15) exp_insert_end -> . LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+    (15) exp_insert -> INSERT INTO COLUMN . exp_insert_end
+    (18) exp_insert_end -> . VALUES LFPARENTH columns RGPARENTH END
+    (19) exp_insert_end -> . LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
 
     VALUES          shift and go to state 25
     LFPARENTH       shift and go to state 26
@@ -280,10 +281,10 @@ state 20
 
 state 21
 
-    (17) columns -> COLUMN COMMA columns .
+    (21) columns -> COLUMN COMMA columns .
 
-    FROM            reduce using rule 17 (columns -> COLUMN COMMA columns .)
-    RGPARENTH       reduce using rule 17 (columns -> COLUMN COMMA columns .)
+    FROM            reduce using rule 21 (columns -> COLUMN COMMA columns .)
+    RGPARENTH       reduce using rule 21 (columns -> COLUMN COMMA columns .)
 
 
 state 22
@@ -297,40 +298,42 @@ state 22
 
 state 23
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH . columns RGPARENTH END
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
+    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH . exp_attribute RGPARENTH END
+    (11) exp_attribute -> . COLUMN TYPE
+    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
+    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
+    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
 
-    COLUMN          shift and go to state 11
+    COLUMN          shift and go to state 31
 
-    columns                        shift and go to state 31
+    exp_attribute                  shift and go to state 32
 
 state 24
 
-    (11) exp_insert -> INSERT INTO COLUMN exp_insert_end .
+    (15) exp_insert -> INSERT INTO COLUMN exp_insert_end .
 
-    SELECT          reduce using rule 11 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    CREATE          reduce using rule 11 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    INSERT          reduce using rule 11 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    $end            reduce using rule 11 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    SELECT          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    CREATE          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    INSERT          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    $end            reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
 
 
 state 25
 
-    (14) exp_insert_end -> VALUES . LFPARENTH columns RGPARENTH END
+    (18) exp_insert_end -> VALUES . LFPARENTH columns RGPARENTH END
 
-    LFPARENTH       shift and go to state 32
+    LFPARENTH       shift and go to state 33
 
 
 state 26
 
-    (15) exp_insert_end -> LFPARENTH . columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
+    (19) exp_insert_end -> LFPARENTH . columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+    (20) columns -> . COLUMN
+    (21) columns -> . COLUMN COMMA columns
 
     COLUMN          shift and go to state 11
 
-    columns                        shift and go to state 33
+    columns                        shift and go to state 34
 
 state 27
 
@@ -345,12 +348,12 @@ state 27
 state 28
 
     (9) exp_select -> SELECT columns FROM COLUMN WHERE . exp_condition END
-    (12) exp_condition -> . COLUMN OP COLUMN
-    (13) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+    (16) exp_condition -> . COLUMN OP COLUMN
+    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
 
-    COLUMN          shift and go to state 34
+    COLUMN          shift and go to state 35
 
-    exp_condition                  shift and go to state 35
+    exp_condition                  shift and go to state 36
 
 state 29
 
@@ -365,89 +368,111 @@ state 29
 state 30
 
     (8) exp_select -> SELECT STAR FROM COLUMN WHERE . exp_condition END
-    (12) exp_condition -> . COLUMN OP COLUMN
-    (13) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+    (16) exp_condition -> . COLUMN OP COLUMN
+    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
 
-    COLUMN          shift and go to state 34
+    COLUMN          shift and go to state 35
 
-    exp_condition                  shift and go to state 36
+    exp_condition                  shift and go to state 37
 
 state 31
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH columns . RGPARENTH END
+    (11) exp_attribute -> COLUMN . TYPE
+    (12) exp_attribute -> COLUMN . TYPE LFPARENTH COLUMN RGPARENTH
+    (13) exp_attribute -> COLUMN . TYPE COMMA exp_attribute
+    (14) exp_attribute -> COLUMN . TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
 
-    RGPARENTH       shift and go to state 37
+    TYPE            shift and go to state 38
 
 
 state 32
 
-    (14) exp_insert_end -> VALUES LFPARENTH . columns RGPARENTH END
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
-
-    COLUMN          shift and go to state 11
-
-    columns                        shift and go to state 38
-
-state 33
-
-    (15) exp_insert_end -> LFPARENTH columns . RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute . RGPARENTH END
 
     RGPARENTH       shift and go to state 39
 
 
+state 33
+
+    (18) exp_insert_end -> VALUES LFPARENTH . columns RGPARENTH END
+    (20) columns -> . COLUMN
+    (21) columns -> . COLUMN COMMA columns
+
+    COLUMN          shift and go to state 11
+
+    columns                        shift and go to state 40
+
 state 34
 
-    (12) exp_condition -> COLUMN . OP COLUMN
-    (13) exp_condition -> COLUMN . OP COLUMN AND exp_condition
+    (19) exp_insert_end -> LFPARENTH columns . RGPARENTH VALUES LFPARENTH columns RGPARENTH END
 
-    OP              shift and go to state 40
+    RGPARENTH       shift and go to state 41
 
 
 state 35
 
-    (9) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition . END
+    (16) exp_condition -> COLUMN . OP COLUMN
+    (17) exp_condition -> COLUMN . OP COLUMN AND exp_condition
 
-    END             shift and go to state 41
+    OP              shift and go to state 42
 
 
 state 36
 
-    (8) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition . END
-
-    END             shift and go to state 42
-
-
-state 37
-
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH . END
+    (9) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition . END
 
     END             shift and go to state 43
 
 
+state 37
+
+    (8) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition . END
+
+    END             shift and go to state 44
+
+
 state 38
 
-    (14) exp_insert_end -> VALUES LFPARENTH columns . RGPARENTH END
+    (11) exp_attribute -> COLUMN TYPE .
+    (12) exp_attribute -> COLUMN TYPE . LFPARENTH COLUMN RGPARENTH
+    (13) exp_attribute -> COLUMN TYPE . COMMA exp_attribute
+    (14) exp_attribute -> COLUMN TYPE . LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
 
-    RGPARENTH       shift and go to state 44
+    RGPARENTH       reduce using rule 11 (exp_attribute -> COLUMN TYPE .)
+    LFPARENTH       shift and go to state 45
+    COMMA           shift and go to state 46
 
 
 state 39
 
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH . VALUES LFPARENTH columns RGPARENTH END
+    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH . END
 
-    VALUES          shift and go to state 45
+    END             shift and go to state 47
 
 
 state 40
 
-    (12) exp_condition -> COLUMN OP . COLUMN
-    (13) exp_condition -> COLUMN OP . COLUMN AND exp_condition
+    (18) exp_insert_end -> VALUES LFPARENTH columns . RGPARENTH END
 
-    COLUMN          shift and go to state 46
+    RGPARENTH       shift and go to state 48
 
 
 state 41
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH . VALUES LFPARENTH columns RGPARENTH END
+
+    VALUES          shift and go to state 49
+
+
+state 42
+
+    (16) exp_condition -> COLUMN OP . COLUMN
+    (17) exp_condition -> COLUMN OP . COLUMN AND exp_condition
+
+    COLUMN          shift and go to state 50
+
+
+state 43
 
     (9) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .
 
@@ -457,7 +482,7 @@ state 41
     $end            reduce using rule 9 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
 
 
-state 42
+state 44
 
     (8) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .
 
@@ -467,96 +492,159 @@ state 42
     $end            reduce using rule 8 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
 
 
-state 43
-
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END .
-
-    SELECT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END .)
-    CREATE          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END .)
-    INSERT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END .)
-    $end            reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END .)
-
-
-state 44
-
-    (14) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH . END
-
-    END             shift and go to state 47
-
-
 state 45
 
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES . LFPARENTH columns RGPARENTH END
+    (12) exp_attribute -> COLUMN TYPE LFPARENTH . COLUMN RGPARENTH
+    (14) exp_attribute -> COLUMN TYPE LFPARENTH . COLUMN RGPARENTH COMMA exp_attribute
 
-    LFPARENTH       shift and go to state 48
+    COLUMN          shift and go to state 51
 
 
 state 46
 
-    (12) exp_condition -> COLUMN OP COLUMN .
-    (13) exp_condition -> COLUMN OP COLUMN . AND exp_condition
+    (13) exp_attribute -> COLUMN TYPE COMMA . exp_attribute
+    (11) exp_attribute -> . COLUMN TYPE
+    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
+    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
+    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
 
-    END             reduce using rule 12 (exp_condition -> COLUMN OP COLUMN .)
-    AND             shift and go to state 49
+    COLUMN          shift and go to state 31
 
+    exp_attribute                  shift and go to state 52
 
 state 47
 
-    (14) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .
+    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .
 
-    SELECT          reduce using rule 14 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    CREATE          reduce using rule 14 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    INSERT          reduce using rule 14 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    $end            reduce using rule 14 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    SELECT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
+    CREATE          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
+    INSERT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
+    $end            reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
 
 
 state 48
 
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH . columns RGPARENTH END
-    (16) columns -> . COLUMN
-    (17) columns -> . COLUMN COMMA columns
-
-    COLUMN          shift and go to state 11
-
-    columns                        shift and go to state 50
-
-state 49
-
-    (13) exp_condition -> COLUMN OP COLUMN AND . exp_condition
-    (12) exp_condition -> . COLUMN OP COLUMN
-    (13) exp_condition -> . COLUMN OP COLUMN AND exp_condition
-
-    COLUMN          shift and go to state 34
-
-    exp_condition                  shift and go to state 51
-
-state 50
-
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns . RGPARENTH END
-
-    RGPARENTH       shift and go to state 52
-
-
-state 51
-
-    (13) exp_condition -> COLUMN OP COLUMN AND exp_condition .
-
-    END             reduce using rule 13 (exp_condition -> COLUMN OP COLUMN AND exp_condition .)
-
-
-state 52
-
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH . END
+    (18) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH . END
 
     END             shift and go to state 53
 
 
+state 49
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES . LFPARENTH columns RGPARENTH END
+
+    LFPARENTH       shift and go to state 54
+
+
+state 50
+
+    (16) exp_condition -> COLUMN OP COLUMN .
+    (17) exp_condition -> COLUMN OP COLUMN . AND exp_condition
+
+    END             reduce using rule 16 (exp_condition -> COLUMN OP COLUMN .)
+    AND             shift and go to state 55
+
+
+state 51
+
+    (12) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN . RGPARENTH
+    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN . RGPARENTH COMMA exp_attribute
+
+    RGPARENTH       shift and go to state 56
+
+
+state 52
+
+    (13) exp_attribute -> COLUMN TYPE COMMA exp_attribute .
+
+    RGPARENTH       reduce using rule 13 (exp_attribute -> COLUMN TYPE COMMA exp_attribute .)
+
+
 state 53
 
-    (15) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .
+    (18) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .
 
-    SELECT          reduce using rule 15 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    CREATE          reduce using rule 15 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    INSERT          reduce using rule 15 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    $end            reduce using rule 15 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    SELECT          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    CREATE          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    INSERT          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    $end            reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+
+
+state 54
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH . columns RGPARENTH END
+    (20) columns -> . COLUMN
+    (21) columns -> . COLUMN COMMA columns
+
+    COLUMN          shift and go to state 11
+
+    columns                        shift and go to state 57
+
+state 55
+
+    (17) exp_condition -> COLUMN OP COLUMN AND . exp_condition
+    (16) exp_condition -> . COLUMN OP COLUMN
+    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+
+    COLUMN          shift and go to state 35
+
+    exp_condition                  shift and go to state 58
+
+state 56
+
+    (12) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH .
+    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH . COMMA exp_attribute
+
+    RGPARENTH       reduce using rule 12 (exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH .)
+    COMMA           shift and go to state 59
+
+
+state 57
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns . RGPARENTH END
+
+    RGPARENTH       shift and go to state 60
+
+
+state 58
+
+    (17) exp_condition -> COLUMN OP COLUMN AND exp_condition .
+
+    END             reduce using rule 17 (exp_condition -> COLUMN OP COLUMN AND exp_condition .)
+
+
+state 59
+
+    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA . exp_attribute
+    (11) exp_attribute -> . COLUMN TYPE
+    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
+    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
+    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+
+    COLUMN          shift and go to state 31
+
+    exp_attribute                  shift and go to state 61
+
+state 60
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH . END
+
+    END             shift and go to state 62
+
+
+state 61
+
+    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute .
+
+    RGPARENTH       reduce using rule 14 (exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute .)
+
+
+state 62
+
+    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .
+
+    SELECT          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    CREATE          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    INSERT          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    $end            reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
 

@@ -19,7 +19,7 @@ tokens = (
     'WHERE',
     'FROM',
     'AND',
-    'SET',
+    # 'SET',
     # 'EQUAL',
     'STAR',
     "END",
@@ -39,14 +39,15 @@ t_VALUES = r'VALUES|values'
 t_WHERE = r'WHERE|where'
 t_FROM = r'FROM|from'
 t_AND = r'AND|and'
-t_SET = r'SET|set'
+# t_SET = r'SET|set'
 # t_EQUAL = r'\='
 t_TABLE = r'TABLE|table'
 t_COMMA = r','
 t_STAR = r'\*'
 t_END = r';'
 t_OP = r'>|<|>=|<=|='
-t_TYPE = r'INT|CHAR\([0-9]*\)|FLOAT|int|char\([0-9]*\)|float'
+t_TYPE = r'INT|CHAR|FLOAT|int|char|float'
+
 
 def t_COLUMN(t):
     r'[a-zA-Z0-9/.-]+'
@@ -72,6 +73,8 @@ def t_COLUMN(t):
         t.type = 'SELECT'
     if t.value in ['AND', 'and']:
         t.type = 'AND'
+    if t.value in ['INT','int','FLOAT','float','char','CHAR']:
+        t.type = 'TYPE'
     return t
 
 
@@ -187,10 +190,7 @@ class Create(object):
         self.values.append(value)
 
     def action(self):
-        datas[self.table] = collections.OrderedDict()
-        for v in self.values:
-            datas[self.table][v] = []
-        print("create : ", datas)
+        print("create : ", self.values,"table : ",self.table)
 
 
 class Insert(object):
@@ -271,7 +271,7 @@ def p_expression_select(t):
 
 
 def p_expression_create(t):
-    '''exp_create : CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END'''
+    '''exp_create : CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END'''
     print(t[1])
     global current_action
     current_action = Create()
@@ -280,7 +280,15 @@ def p_expression_create(t):
         return
     # 处理参数
     current_action.add_stack(stack)
-# def p_expression_attribute(t):
+def p_expression_attribute(t):
+    '''exp_attribute : COLUMN TYPE 
+                     | COLUMN TYPE LFPARENTH COLUMN RGPARENTH
+                     | COLUMN TYPE COMMA exp_attribute
+                     | COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute'''
+    if len(t) > 3 and t[3] == '(':
+        stack.append((t[1],t[2],t[4]))
+    else:
+        stack.append((t[1],t[2]))
 
 
 def p_expression_insert(t):
