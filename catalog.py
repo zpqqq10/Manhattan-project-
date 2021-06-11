@@ -147,6 +147,7 @@ class catalog_manager:
     # update the file & tables
     # assume that the values have been processed by the interpreter
     def create_table(self, tbl_name, primary_key, attrlist):
+        self.table_exists(tbl_name)
         tmp = Table(tbl_name, primary_key, len(attrlist))
         for attr in attrlist: 
             tmp.attributes.append(Attribute(attr[0], attr[1], attr[2], attr[3]))
@@ -167,6 +168,7 @@ class catalog_manager:
     def create_index(self, index_name, tbl_name, key):
         self.key_not_exists(tbl_name, key)
         self.key_not_unique(tbl_name, key)
+        self.index_exists(index_name)
         self.indices[index_name] = [tbl_name, key]
         # index.build_index()
 
@@ -178,16 +180,17 @@ class catalog_manager:
         # the catalog file?
         print("Successfully drop index '%s'" % index_name)
 
-t = catalog_manager()
-print(t.tables)
-print(t.tables['abc'].attributes[0])
-print(t.tables['abc'].attributes[0].type)
-print(t.indices)
-t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
-t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
+if __name__ == "__main__": 
+    t = catalog_manager()
+    print(t.tables)
+    print(t.tables['abc'].attributes[0])
+    print(t.tables['abc'].attributes[0].type)
+    print(t.indices)
+    t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
+    t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 
-# t.drop_table('xyz')
-t.create_index('indexabc', 'abc', 'sid')
-t.create_index('index_xyz', 'xyz', 'sid')
-t.drop_index('indexabc')
-t.save()
+    # t.drop_table('xyz')
+    t.create_index('indexabc', 'abc', 'sid')
+    t.create_index('index_xyz', 'xyz', 'sid')
+    t.drop_index('indexabc')
+    t.save()
