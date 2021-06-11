@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND COLUMN COMMA CREATE END EQUAL FROM INSERT INTO LFPARENTH RGPARENTH SELECT SET STAR TABLE UPDATE VALUES WHEREexpressions : expression\n                    | expressions expressionexpression :  exp_select\n                    | exp_create\n                    | exp_insert\n                    | exp_updateexp_select : SELECT columns FROM COLUMN END\n                    | SELECT STAR FROM COLUMN ENDexp_create : CREATE TABLE COLUMN LFPARENTH columns RGPARENTH ENDexp_insert : INSERT INTO COLUMN exp_insert_endexp_update : UPDATE COLUMN SET exp_update_colums WHERE exp_update_condition ENDexp_update_colums : COLUMN EQUAL COLUMN\n                         | COLUMN EQUAL COLUMN COMMA exp_update_columsexp_update_condition : COLUMN EQUAL COLUMN\n                            | COLUMN EQUAL COLUMN AND exp_update_conditionexp_insert_end : VALUES LFPARENTH columns RGPARENTH END\n                      | LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH ENDcolumns : COLUMN\n               | COLUMN COMMA columns'
+_lr_signature = 'AND COLUMN COMMA CREATE END FROM INSERT INTO LFPARENTH OP RGPARENTH SELECT SET STAR TABLE VALUES WHEREexpressions : expression\n                    | expressions expressionexpression :  exp_select\n                    | exp_create\n                    | exp_insertexp_select : SELECT columns FROM COLUMN END\n                    | SELECT STAR FROM COLUMN END\n                    | SELECT STAR FROM COLUMN WHERE exp_condition END\n                    | SELECT columns FROM COLUMN WHERE exp_condition ENDexp_create : CREATE TABLE COLUMN LFPARENTH columns RGPARENTH ENDexp_insert : INSERT INTO COLUMN exp_insert_endexp_condition : COLUMN OP COLUMN\n                     | COLUMN OP COLUMN AND exp_conditionexp_insert_end : VALUES LFPARENTH columns RGPARENTH END\n                      | LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH ENDcolumns : COLUMN\n               | COLUMN COMMA columns'
     
-_lr_action_items = {'SELECT':([0,1,2,3,4,5,6,11,28,33,34,46,51,52,60,],[7,7,-1,-3,-4,-5,-6,-2,-10,-7,-8,-9,-11,-16,-17,]),'CREATE':([0,1,2,3,4,5,6,11,28,33,34,46,51,52,60,],[8,8,-1,-3,-4,-5,-6,-2,-10,-7,-8,-9,-11,-16,-17,]),'INSERT':([0,1,2,3,4,5,6,11,28,33,34,46,51,52,60,],[9,9,-1,-3,-4,-5,-6,-2,-10,-7,-8,-9,-11,-16,-17,]),'UPDATE':([0,1,2,3,4,5,6,11,28,33,34,46,51,52,60,],[10,10,-1,-3,-4,-5,-6,-2,-10,-7,-8,-9,-11,-16,-17,]),'$end':([1,2,3,4,5,6,11,28,33,34,46,51,52,60,],[0,-1,-3,-4,-5,-6,-2,-10,-7,-8,-9,-11,-16,-17,]),'STAR':([7,],[14,]),'COLUMN':([7,10,15,16,18,19,20,23,27,30,36,38,39,49,50,53,57,],[13,17,21,22,24,13,26,31,13,13,13,43,44,31,55,13,44,]),'TABLE':([8,],[15,]),'INTO':([9,],[16,]),'FROM':([12,13,14,25,],[18,-18,20,-19,]),'RGPARENTH':([13,25,35,37,41,56,],[-18,-19,40,42,47,58,]),'COMMA':([13,43,],[19,49,]),'SET':([17,],[23,]),'LFPARENTH':([21,22,29,48,],[27,30,36,53,]),'VALUES':([22,42,],[29,48,]),'END':([24,26,40,45,47,55,58,59,],[33,34,46,51,52,-14,60,-15,]),'EQUAL':([31,44,],[38,50,]),'WHERE':([32,43,54,],[39,-12,-13,]),'AND':([55,],[57,]),}
+_lr_action_items = {'SELECT':([0,1,2,3,4,5,9,24,27,29,41,42,43,47,53,],[6,6,-1,-3,-4,-5,-2,-11,-6,-7,-9,-8,-10,-14,-15,]),'CREATE':([0,1,2,3,4,5,9,24,27,29,41,42,43,47,53,],[7,7,-1,-3,-4,-5,-2,-11,-6,-7,-9,-8,-10,-14,-15,]),'INSERT':([0,1,2,3,4,5,9,24,27,29,41,42,43,47,53,],[8,8,-1,-3,-4,-5,-2,-11,-6,-7,-9,-8,-10,-14,-15,]),'$end':([1,2,3,4,5,9,24,27,29,41,42,43,47,53,],[0,-1,-3,-4,-5,-2,-11,-6,-7,-9,-8,-10,-14,-15,]),'STAR':([6,],[12,]),'COLUMN':([6,13,14,15,16,17,23,26,28,30,32,40,48,49,],[11,18,19,20,11,22,11,11,34,34,11,46,11,34,]),'TABLE':([7,],[13,]),'INTO':([8,],[14,]),'FROM':([10,11,12,21,],[15,-16,17,-17,]),'RGPARENTH':([11,21,31,33,38,50,],[-16,-17,37,39,44,52,]),'COMMA':([11,],[16,]),'LFPARENTH':([18,19,25,45,],[23,26,32,48,]),'VALUES':([19,39,],[25,45,]),'END':([20,22,35,36,37,44,46,51,52,],[27,29,41,42,43,47,-12,-13,53,]),'WHERE':([20,22,],[28,30,]),'OP':([34,],[40,]),'AND':([46,],[49,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expressions':([0,],[1,]),'expression':([0,1,],[2,11,]),'exp_select':([0,1,],[3,3,]),'exp_create':([0,1,],[4,4,]),'exp_insert':([0,1,],[5,5,]),'exp_update':([0,1,],[6,6,]),'columns':([7,19,27,30,36,53,],[12,25,35,37,41,56,]),'exp_insert_end':([22,],[28,]),'exp_update_colums':([23,49,],[32,54,]),'exp_update_condition':([39,57,],[45,59,]),}
+_lr_goto_items = {'expressions':([0,],[1,]),'expression':([0,1,],[2,9,]),'exp_select':([0,1,],[3,3,]),'exp_create':([0,1,],[4,4,]),'exp_insert':([0,1,],[5,5,]),'columns':([6,16,23,26,32,48,],[10,21,31,33,38,50,]),'exp_insert_end':([19,],[24,]),'exp_condition':([28,30,49,],[35,36,51,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,23 +27,21 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expressions","S'",1,None,None,None),
-  ('expressions -> expression','expressions',1,'p_statement_expr','interpreter.py',300),
-  ('expressions -> expressions expression','expressions',2,'p_statement_expr','interpreter.py',301),
-  ('expression -> exp_select','expression',1,'p_expression_start','interpreter.py',308),
-  ('expression -> exp_create','expression',1,'p_expression_start','interpreter.py',309),
-  ('expression -> exp_insert','expression',1,'p_expression_start','interpreter.py',310),
-  ('expression -> exp_update','expression',1,'p_expression_start','interpreter.py',311),
-  ('exp_select -> SELECT columns FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',315),
-  ('exp_select -> SELECT STAR FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',316),
-  ('exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END','exp_create',7,'p_expression_create','interpreter.py',328),
-  ('exp_insert -> INSERT INTO COLUMN exp_insert_end','exp_insert',4,'p_expression_insert','interpreter.py',340),
-  ('exp_update -> UPDATE COLUMN SET exp_update_colums WHERE exp_update_condition END','exp_update',7,'p_expression_update','interpreter.py',353),
-  ('exp_update_colums -> COLUMN EQUAL COLUMN','exp_update_colums',3,'p_expression_update_columns','interpreter.py',365),
-  ('exp_update_colums -> COLUMN EQUAL COLUMN COMMA exp_update_colums','exp_update_colums',5,'p_expression_update_columns','interpreter.py',366),
-  ('exp_update_condition -> COLUMN EQUAL COLUMN','exp_update_condition',3,'p_expression_update_condition','interpreter.py',372),
-  ('exp_update_condition -> COLUMN EQUAL COLUMN AND exp_update_condition','exp_update_condition',5,'p_expression_update_condition','interpreter.py',373),
-  ('exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',5,'p_expresssion_insert_end','interpreter.py',378),
-  ('exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',8,'p_expresssion_insert_end','interpreter.py',379),
-  ('columns -> COLUMN','columns',1,'p_expression_columns','interpreter.py',385),
-  ('columns -> COLUMN COMMA columns','columns',3,'p_expression_columns','interpreter.py',386),
+  ('expressions -> expression','expressions',1,'p_statement_expr','interpreter.py',240),
+  ('expressions -> expressions expression','expressions',2,'p_statement_expr','interpreter.py',241),
+  ('expression -> exp_select','expression',1,'p_expression_start','interpreter.py',248),
+  ('expression -> exp_create','expression',1,'p_expression_start','interpreter.py',249),
+  ('expression -> exp_insert','expression',1,'p_expression_start','interpreter.py',250),
+  ('exp_select -> SELECT columns FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',254),
+  ('exp_select -> SELECT STAR FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',255),
+  ('exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',256),
+  ('exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',257),
+  ('exp_create -> CREATE TABLE COLUMN LFPARENTH columns RGPARENTH END','exp_create',7,'p_expression_create','interpreter.py',271),
+  ('exp_insert -> INSERT INTO COLUMN exp_insert_end','exp_insert',4,'p_expression_insert','interpreter.py',283),
+  ('exp_condition -> COLUMN OP COLUMN','exp_condition',3,'p_expression_condition','interpreter.py',297),
+  ('exp_condition -> COLUMN OP COLUMN AND exp_condition','exp_condition',5,'p_expression_condition','interpreter.py',298),
+  ('exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',5,'p_expresssion_insert_end','interpreter.py',304),
+  ('exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',8,'p_expresssion_insert_end','interpreter.py',305),
+  ('columns -> COLUMN','columns',1,'p_expression_columns','interpreter.py',311),
+  ('columns -> COLUMN COMMA columns','columns',3,'p_expression_columns','interpreter.py',312),
 ]
