@@ -180,14 +180,16 @@ class catalog_manager:
 
 t = catalog_manager()
 print(t.tables)
-print(t.tables['abc'].attributes[0])
-print(t.tables['abc'].attributes[0].type)
-print(t.indices)
+
+
 t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
-
+print(t.tables['abc'].attributes[0])
+print(t.tables['abc'].attributes[0].type)
 # t.drop_table('xyz')
 t.create_index('indexabc', 'abc', 'sid')
 t.create_index('index_xyz', 'xyz', 'sid')
-t.drop_index('indexabc')
+# t.drop_index('indexabc')
+print(t.tables)
+print(t.indices)
 t.save()
