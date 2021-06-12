@@ -1,7 +1,7 @@
 from sys import version
 import ply.lex as lex
 import ply.yacc as yacc
-from catalog import catalog_manager
+from catalog import catalog_manager,Table
 import collections
 
 tokens = (
@@ -203,37 +203,33 @@ class Insert(object):
 
     def set_table(self, table):
         self.table = table
-        return table not in datas
+        return table not in catalog.tables.keys()
 
     def add_stack(self, stack):
         # 判断是否输入的sql 为 insert into table(c1, c2, c3) values(1,2,3)
         self._stack = stack
 
     def action(self):
-        table = datas[self.table]
         if self._stack.is_columns:
             if len(self._stack) and len(self._stack) % 2 == 0:
                 index = int(len(self._stack) / 2)
-                if index != len(table.keys()):
+                if index != len(catalog.tables[self.table].attributes):
                     print("error default columns")
                     return
-                for i in range(index):
-                    if self._stack[i] in table:
-                        table[self._stack[i]].append(self._stack[i + index])
+                attrs  = self._stack[:index]
+                values = self._stack[index:]
+                print(attrs,values)
 
             else:
                 print(" error columns and values not equal")
                 return
         else:
-            if len(table.keys()) != len(self._stack):
+            if len(catalog.tables[self.table].attributes) != len(self._stack):
                 print("input values len {0} not equal table columes len {1}".
-                      format(len(self._stack), len(table.keys())))
+                      format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 return
-            t_index = 0
-            for v in table.keys():
-                table[v].append(self._stack[t_index])
-                t_index += 1
-        print("insert : ", datas)
+            self._stack._stack.reverse()
+            print(self._stack)
 
 
 
