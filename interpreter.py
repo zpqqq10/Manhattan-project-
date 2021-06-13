@@ -3,7 +3,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 from catalog import catalog_manager,Table
 import collections
-
+catalog = None
 tokens = (
     'LFPARENTH',
     'RGPARENTH',
@@ -326,6 +326,12 @@ def p_error(p):
         print("Syntax error at {0}".format(p.value))
     else:
         print("Syntax error at EOF")
+def interpreter(data):
+    yacc.yacc()
+    yacc.parse(data)
+def set_catalog(catalog_m):
+    global catalog
+    catalog = catalog_m
 if __name__ == "__main__":
     catalog = catalog_manager()
     print(catalog.tables.keys())
