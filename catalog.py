@@ -35,17 +35,18 @@ class catalog_manager:
             self.tables[table_name] = Table(table_name, primary, num_attr)  # read a table
             for i in range(num_attr): 
                 len_name, = struct.unpack('=i', file.read(4))
+
                 attr_name, = struct.unpack('='+str(len_name)+'s', file.read(len_name))
                 attr_name = attr_name.decode('utf-8')
                 uniqueness, = struct.unpack('=?', file.read(1))
-                type, = struct.unpack('=i', file.read(4))
+                type, = struct.unpack('=B', file.read(1))
                 if type == 1: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, uniqueness, 'i', 0))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'i', 0, uniqueness))
                 elif type == 2: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, uniqueness, 'f', 0))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'f', 0, uniqueness))
                 elif type == 3:
                     length, = struct.unpack('=i', file.read(4))
-                    self.tables[table_name].attributes.append(Attribute(uniqueness, str(length)+'s', length))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, str(length)+'s', length, uniqueness))
         file.close()
         # build indices
         file = open('./catalog/index_catalog.dat', 'rb')
@@ -77,11 +78,11 @@ class catalog_manager:
                 file.write(struct.pack('=i'+str(len_name)+'s', len_name, attr.name.encode('utf-8')))   # name
                 file.write(struct.pack('=?', attr.uniqueness))   # uniqueness
                 if attr.type == 'i':                    # type
-                    file.write(struct.pack('=i', 1))
+                    file.write(struct.pack('=B', 1))
                 elif attr.type == 'f': 
-                    file.write(struct.pack('=i', 2))
+                    file.write(struct.pack('=B', 2))
                 elif attr.type[-1:] == 's': 
-                    file.write(struct.pack('=ii', 3, attr.length))
+                    file.write(struct.pack('=Bi', 3, attr.length))
         file.close()
         # save indices
         file = open('./catalog/index_catalog.dat', 'wb+')
@@ -140,6 +141,14 @@ class catalog_manager:
         for attr in self.tables[tbl_name].attributes: 
             if key == attr.name and attr.uniqueness is False: 
                 raise Exception("The key '%s' is not unique" % key)
+
+    def is_index_key(self, tbl_name, key): 
+        self.table_not_exists(tbl_name)
+        self.key_not_exists(tbl_name, key)
+        for idx_name in self.indices.keys(): 
+            if tbl_name == self.indices[idx_name][0] and key == self.indices[idx_name][1]: 
+                return idx_name
+        return False
             
 
     # update the file & tables
@@ -177,15 +186,17 @@ class catalog_manager:
 if __name__ == "__main__": 
     t = catalog_manager()
     print(t.tables)
-    print(t.tables['abc'].attributes[0])
-    print(t.tables['abc'].attributes[0].type)
+    # print(t.tables['abc'].attributes[0])
+    # print(t.tables['abc'].attributes[0].type)
     print(t.indices)
+    print(t.is_index_key('xyz', 'sid'))
+    print(t.is_index_key('xyz', 'xxx'))
     t.create_table('xyz', 'sid', [['sid', '11s', 11, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
     t.create_table('abc', 'sid', [['sid', '20s', 20, True], ['name', '3s', 3, False], ['sex', 'i', 20, False]])
 
     # t.drop_table('xyz')
-    t.create_index('indexabc', 'abc', 'sid')
-    t.create_index('index_xyz', 'xyz', 'sid')
-    t.drop_index('indexabc')
+    # t.create_index('indexabc', 'abc', 'sid')
+    # t.create_index('index_xyz', 'xyz', 'sid')
+    # t.drop_index('indexabc')
     t.save()
 
