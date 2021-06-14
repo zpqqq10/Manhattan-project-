@@ -266,11 +266,18 @@ class index_manager():
         self.build_Bplus(index_name, addresses, values, order)
         self.print_tree(index_name)
 
+    # may be of no use, do not use
     def drop_index(self, index_name):
         if index_name in self.roots.keys(): 
             del self.roots[index_name]
         else : 
             raise Exception('No such index "%s" in the memory'%index_name)
+
+    # existence is checked outside index manager
+    def drop_index_file(self, index_name):
+        os.chdir(sys.path[0])
+        os.remove('./index/'+index_name+'.ind')
+        
 
     def print_tree(self, index_name): 
         stack = []
@@ -301,6 +308,7 @@ class index_manager():
 # if __name__ == '__main__': 
 #     buffer_m = buffer.bufferManager()
 #     manager = index_manager(buffer_m) 
+#     manager.drop_index_file('tobede')
 #     index_name = 'test'
 #     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24, 70, 55, 17, 31, 77, 27, 61, 20]
 #     values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]

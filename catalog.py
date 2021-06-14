@@ -96,8 +96,6 @@ class catalog_manager:
             file.write(struct.pack('='+str(len_key)+'s', self.indices[index][1].encode('utf-8')))   # name of key
         file.close()
     
-    # def __del__(self): 
-    #     print('del catalog_manager')
 
 
     # raise an exception if the table exists
@@ -152,7 +150,6 @@ class catalog_manager:
         for attr in attrlist: 
             tmp.attributes.append(Attribute(attr[0], attr[1], attr[2], attr[3]))
         self.tables[tbl_name] = tmp
-        # file?
         print("Successfully create table '%s'" % tbl_name)
 
 
@@ -160,7 +157,6 @@ class catalog_manager:
     def drop_table(self, tbl_name):
         self.table_not_exists(tbl_name)
         self.tables.pop(tbl_name)
-        # file?
         print("Successfully drop table '%s'" % tbl_name)
 
 
@@ -170,14 +166,12 @@ class catalog_manager:
         self.key_not_unique(tbl_name, key)
         self.index_exists(index_name)
         self.indices[index_name] = [tbl_name, key]
-        # index.build_index()
 
 
     # update the file & indices
     def drop_index(self, index_name):
         self.index_not_exists(index_name)
         self.indices.pop(index_name)
-        # the catalog file?
         print("Successfully drop index '%s'" % index_name)
 
 if __name__ == "__main__": 

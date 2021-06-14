@@ -169,23 +169,29 @@ class record_manager:
                 result_record.append(record[1:])
                 result_ptr.append(item)
         return (result_record,result_ptr)
+
+    # existence is checked outside record manager
+    def drop_record_file(self, tbl_name):
+        os.chdir(sys.path[0])
+        os.remove('./record/'+tbl_name+'.rec')
             
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])
     buffer = bufferManager()
     t = record_manager(buffer)
-    t.create("abc", [("a", "l", 4), ("b", "l", 4)])
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8)))
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
-    for i in range(600):
-        t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%100,(i+1)%100))
-    t.delete_with_index("abc", 0, 8)
-    t.delete_with_index("abc", 0, 24)
-    print(t.scan_all("abc",[(0,2,98)], [("a", "l", 4), ("b", "l", 4)]))
-    print(t.scan_with_index("abc",[(0,1,98)], [("a", "l", 4), ("b", "l", 4)],[(0,8),(0,24)]))
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
-    print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27)))
-    t.buffer_manager.commitAll()
+    t.drop_record_file('tobe')
+    # t.create("abc", [("a", "l", 4), ("b", "l", 4)])
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (4, 8)))
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
+    # for i in range(600):
+    #     t.insert("abc", [("a", "i", 4), ("b", "i", 4)],(i%100,(i+1)%100))
+    # t.delete_with_index("abc", 0, 8)
+    # t.delete_with_index("abc", 0, 24)
+    # print(t.scan_all("abc",[(0,2,98)], [("a", "l", 4), ("b", "l", 4)]))
+    # print(t.scan_with_index("abc",[(0,1,98)], [("a", "l", 4), ("b", "l", 4)],[(0,8),(0,24)]))
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (5, 6)))
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (3, 7)))
+    # print(t.insert("abc", [("a", "i", 4), ("b", "i", 4)], (22, 27)))
+    # t.buffer_manager.commitAll()
