@@ -33,7 +33,8 @@ tokens = (
     "DROP",
     "DELETE",
     "INDEX",
-    "ON"
+    "ON",
+    "EXECFILE"
 )
 
 
@@ -65,6 +66,7 @@ t_DROP = r'DROP|drop'
 t_DELETE = r'DELETE|delete'
 t_INDEX = r'index|INDEX'
 t_ON = r'ON|on'
+t_EXECFILE = r'EXECFILE|execfile'
 def t_COLUMN(t):
     r'[a-zA-Z0-9/_.-]+'
     if t.value in ['FROM', 'from']:
@@ -109,6 +111,8 @@ def t_COLUMN(t):
         t.type = 'ON'
     if t.value in ['index','INDEX']:
         t.type = 'INDEX'
+    if t.value in ['EXECFILE','execfile']:
+        t.type = 'EXECFILE'
     return t
 
 
@@ -327,12 +331,13 @@ def p_expression_start(t):
                     | exp_insert
                     | exp_drop_table
                     | exp_drop_index
-                    | exp_delete'''
+                    | exp_delete
+                    | exp_execfile'''
 def p_expression_exit(t):
     ''' exp_exit : EXIT'''
     print("Goodbye")
     # a close method in api,commit the buffer and so on 
-    exit()
+    exit(1)
 def p_expression_drop_table(t):
     '''exp_drop_table : DROP TABLE COLUMN END'''
     global current_action
@@ -461,7 +466,9 @@ def p_expression_columns(t):
                | COLUMN COMMA columns'''
     stack.append(t[1])
 
-
+def p_expression_execfile(t):
+    '''exp_execfile : EXECFILE COLUMN END'''
+    file_exec(t[2])
 def p_error(p):
     if p:
         print("Syntax error at {0}".format(p.value))
@@ -473,6 +480,16 @@ def interpreter(data):
 def set_catalog(catalog_m):
     global catalog
     catalog = catalog_m
+def set_api(api_m):
+    global api
+    api = api_m
+def file_exec(file_name):
+    with open(file_name,'r') as f:
+        data_list = f.readlines()
+        for data in data_list:
+            print("sql>"+data)
+            interpreter(data)
+    
 if __name__ == "__main__":
     catalog = catalog_manager()
     print([item.name for item in catalog.tables['xyz'].attributes])

@@ -1,26 +1,7 @@
 from catalog import catalog_manager
-from interpreter import interpreter,set_catalog
 from buffer import bufferManager
 from record import record_manager
 from index import index_manager
-banner1 = \
-'''
-                                        __     
-\    /_ | _ _ ._ _  _  _|_ _  |\/|o._ o(_  _.| 
- \/\/(/_|(_(_)| | |(/_  |_(_) |  ||| ||__)(_|| 
-                                            |  
-
-'''
-banner = \
-'''
- ▄    ▄   ▀             ▀                  ▀▀█                                      
- ██  ██ ▄▄▄    ▄ ▄▄   ▄▄▄     ▄▄▄    ▄▄▄▄    █                  ▄ ▄▄    ▄▄▄         
- █ ██ █   █    █▀  █    █    █   ▀  █▀ ▀█    █    ▄▄▄  ▄        █▀  █  ▀   █  ▄▄▄  ▄
- █ ▀▀ █   █    █   █    █     ▀▀▀▄  █   █    █    ▀  ▀▀▀        █   █  ▄▀▀▀█  ▀  ▀▀▀
- █    █ ▄▄█▄▄  █   █  ▄▄█▄▄  ▀▄▄▄▀  ▀█▄██    ▀▄▄                █   █  ▀▄▄▀█        
-                                        █                                           
-                                        ▀                                                                                  
-'''
 
 class optimizer(object):
     def __init__(self):
@@ -127,9 +108,6 @@ class API():
         # if an index can be made use of, use the index
         # if not, scan all the records
         pass
-
-api = API()
-
 # retrive data from interpreter
 def retrieve_table(_tbl_name, _tbl_pky, _attributes): 
     global api
@@ -153,15 +131,7 @@ def retrieve_select(columns, conditions):
     api.s_values = [cdt[2] for cdt in conditions]
     api.s_ops = [cdt[1] for cdt in conditions]
 
-if __name__ == "__main__":
-    print(banner)
-    
-    # set_catalog(catalog)
-    while True:
-        try:
-            data = input("sql>")
-            interpreter(data)
-            # if data == 'bye': 
-            #     break
-        except :
-            print('error')
+
+
+
+
