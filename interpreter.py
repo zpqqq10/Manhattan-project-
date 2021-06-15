@@ -216,7 +216,7 @@ class Delete(object):
     def action(self):
         """展示数据"""
 
-        print("self.values",self.conditions)
+        print("self.table",self.table,"self,condition",self.conditions)
 
 class Create(object):
     def __init__(self):
@@ -246,7 +246,7 @@ class Create(object):
     def action(self): 
         # the last value of the attribute tuple is whether the attribute is unique 
         if self.is_Index:
-            print("Create Index:",self.table,self.index,self.attr)
+            print("Create Index: table",self.table,"index",self.index,"attribute",self.attr)
         else:
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
@@ -279,7 +279,7 @@ class Insert(object):
                     return
                 attrs  = self._stack[:index]
                 values = self._stack[index:]
-                print(attrs,values)
+                print("Insert with columns: attributes:",attrs,"values:",values)
 
             else:
                 print(" error columns and values not equal")
@@ -290,7 +290,7 @@ class Insert(object):
                       format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 return
             self._stack._stack.reverse()
-            print(self._stack)
+            print("Insert without columns: values:",self._stack)
 class Drop(object):
     def __init__(self):
         self.table = None
@@ -304,9 +304,9 @@ class Drop(object):
     def action(self):
         global catalog
         if self.table and self.table in catalog.tables.keys():
-            print(self.table)
+            print("Drop table:",self.table)
         if self.index and self.index in catalog.indices.keys():
-            print(self.index)
+            print("Drop index:",self.index)
 
 
 
@@ -431,7 +431,6 @@ def p_expression_attribute(t):
 
 def p_expression_insert(t):
     '''exp_insert : INSERT INTO COLUMN exp_insert_end'''
-    print(t[1])
     global current_action
     current_action = Insert()
     if current_action.set_table(t[3]):
