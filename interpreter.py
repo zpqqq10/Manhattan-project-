@@ -192,7 +192,6 @@ class Create(object):
     def action(self):
         print("create : ", self.values,"table : ",self.table)
 
-
 class Insert(object):
 
     def __init__(self):
