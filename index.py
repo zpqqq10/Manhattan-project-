@@ -226,10 +226,8 @@ class index_manager():
                     content = struct.pack('=hh', node.children[i].bid, 0)
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
-                    if type[-1:] == 's': 
-                        content = struct.pack('='+type, node.keys[i].encode('utf-8'))
-                    else: 
-                        content = struct.pack('='+type, node.keys[i])
+                    # data read from file is encoded
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -248,10 +246,8 @@ class index_manager():
                     content = struct.pack('=hh', node.children[i][0], node.children[i][1])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
-                    if type[-1:] == 's': 
-                        content = struct.pack('='+type, node.keys[i].encode('utf-8'))
-                    else: 
-                        content = struct.pack('='+type, node.keys[i])
+                    # data read from file is encoded
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -263,6 +259,7 @@ class index_manager():
                 self.buffer_manager.commitOne(index_name, 1, bid)
 
     def create_index(self, index_name, addresses, values, order):
+        # if len(values) != 0: 
         self.build_Bplus(index_name, addresses, values, order)
         self.print_tree(index_name)
 

@@ -29,6 +29,7 @@ class optimizer(object):
     # of no use temporarily
     def select_opt(self, keys, values, ops, index_dic): 
         pass
+
         
 
 class API(): 
@@ -43,7 +44,7 @@ class API():
         self.tbl_name = self.tbl_pky = self.tbl_attributes = None
         # index
         #   name        key of the index
-        self.idx_name = self.idx_key = None
+        self.idx_name = self.idx_key = self.idx_tbl = None
         # search 
         # columns to be listed
         #                keys to be selected on
@@ -54,8 +55,8 @@ class API():
     def create_table(self): 
         # attr[0]: name     attr[1]: type
         # attr[2]: length   attr[3]: uniqueness
-        # process self.tbl_attributes into the format above at first
-        # the process should be done after interpreter is complete
+        '''process self.tbl_attributes into the format above at first
+        the process should be done after interpreter is complete'''
         # duplicate is checked in this call
         self.catalog.create_table(self.tbl_name, self.tbl_pky)
         self.record.create(self.tbl_name, self.tbl_attributes)
@@ -76,7 +77,31 @@ class API():
         self.record.drop_record_file(self.tbl_name)
 
     def create_index(self): 
-        pass
+        # duplicate, existence and uniqueness is checked in this call
+        self.catalog.create_index(self.idx_name, self.idx_tbl, self.idx_key)
+        # attr[0]: name     attr[1]: type
+        # attr[2]: length   attr[3]: uniqueness
+        '''process self.tbl_attributes into the format above at first
+        the process should be done after interpreter is complete'''
+        key_idx = 0
+        type = length = None
+        for i in range(len(self.catalog.tables[self.tbl_name].attributes)): 
+            # the index of the key in the table is i
+            if self.catalog.tables[self.tbl_name].attributes[i].name == self.idx_key: 
+                key_idx = i
+                type = self.catalog.tables[self.tbl_name].attributes[i].type
+                length = self.catalog.tables[self.tbl_name].attributes[i].length
+        # read all the records
+        records, addresses = self.record.scan_all(self.tbl_name, [], self.tbl_attributes)
+        # extract the values
+        values = [rec[key_idx] for rec in records]
+        # order = (4096-2-1-2) // (length of key + 2) + 1
+        order = (4096 - 5) // (length + 2) + 1
+        # create the index
+        self.index.create_index(self.idx_name, addresses, values, order)
+        # save the B plus tree as a file
+        self.index.save_Bplus(self.idx_name, type, length)
+
 
     def drop_index(self):
         # existence is checked in this call
@@ -84,12 +109,23 @@ class API():
         self.index.drop_index_file(self.idx_name)
 
     def insert_record(self): 
+        # mind to encode the string before calling self.record.insert()
+        '''check whether the number of values input equals to the number of attributes'''
+        '''transform the input to the correct format'''
+        '''call self.index.search() to check uniqueness'''
+        '''call self.record.insert()'''
+        '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
         pass
 
     def delete_record(self): 
+        # mind to encode the string before calling self.record.insert()
+        '''update the record and the index'''
         pass
 
     def select(self): 
+        # decode
+        # if an index can be made use of, use the index
+        # if not, scan all the records
         pass
 
 api = API()
@@ -103,10 +139,11 @@ def retrieve_table(_tbl_name, _tbl_pky, _attributes):
     api.tbl_attributes = _attributes
 
 # retrive data from interpreter
-def retrieve_index(_idx_name, _idx_key): 
+def retrieve_index(_idx_name, _idx_key, _idx_tbl): 
     global api
     api.idx_name = _idx_name
     api.idx_key = _idx_key
+    api.idx_tbl = _idx_tbl
 
 # retrive data from interpreter
 def retrieve_select(columns, conditions): 
