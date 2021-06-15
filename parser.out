@@ -5,56 +5,84 @@ Grammar
 Rule 0     S' -> expressions
 Rule 1     expressions -> expression
 Rule 2     expressions -> expressions expression
-Rule 3     expression -> exp_select
-Rule 4     expression -> exp_create
-Rule 5     expression -> exp_insert
-Rule 6     exp_select -> SELECT columns FROM COLUMN END
-Rule 7     exp_select -> SELECT STAR FROM COLUMN END
-Rule 8     exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END
-Rule 9     exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END
-Rule 10    exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
-Rule 11    exp_attribute -> COLUMN TYPE
-Rule 12    exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH
-Rule 13    exp_attribute -> COLUMN TYPE COMMA exp_attribute
-Rule 14    exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
-Rule 15    exp_insert -> INSERT INTO COLUMN exp_insert_end
-Rule 16    exp_condition -> COLUMN OP COLUMN
-Rule 17    exp_condition -> COLUMN OP COLUMN AND exp_condition
-Rule 18    exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END
-Rule 19    exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
-Rule 20    columns -> COLUMN
-Rule 21    columns -> COLUMN COMMA columns
+Rule 3     expressions -> exp_exit
+Rule 4     expression -> exp_select
+Rule 5     expression -> exp_create_table
+Rule 6     expression -> exp_create_index
+Rule 7     expression -> exp_insert
+Rule 8     expression -> exp_drop_table
+Rule 9     expression -> exp_drop_index
+Rule 10    expression -> exp_delete
+Rule 11    exp_exit -> EXIT
+Rule 12    exp_drop_table -> DROP TABLE COLUMN END
+Rule 13    exp_drop_index -> DROP INDEX COLUMN END
+Rule 14    exp_delete -> DELETE FROM COLUMN END
+Rule 15    exp_delete -> DELETE FROM COLUMN WHERE exp_condition END
+Rule 16    exp_select -> SELECT columns FROM COLUMN END
+Rule 17    exp_select -> SELECT STAR FROM COLUMN END
+Rule 18    exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END
+Rule 19    exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END
+Rule 20    exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+Rule 21    exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END
+Rule 22    exp_attributes -> exp_attribute
+Rule 23    exp_attributes -> exp_attributes COMMA exp_attribute
+Rule 24    exp_attribute -> COLUMN TYPE
+Rule 25    exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH
+Rule 26    exp_attribute -> COLUMN TYPE UNIQUE
+Rule 27    exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE
+Rule 28    exp_insert -> INSERT INTO COLUMN exp_insert_end
+Rule 29    exp_condition -> COLUMN OP COLUMN
+Rule 30    exp_condition -> COLUMN OP COLUMN AND exp_condition
+Rule 31    exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END
+Rule 32    exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+Rule 33    columns -> COLUMN
+Rule 34    columns -> COLUMN COMMA columns
 
 Terminals, with rules where they appear
 
-AND                  : 17
-COLUMN               : 6 7 8 9 10 11 12 12 13 14 14 15 16 16 17 17 20 21
-COMMA                : 13 14 21
-CREATE               : 10
-END                  : 6 7 8 9 10 18 19
-FROM                 : 6 7 8 9
-INSERT               : 15
-INTO                 : 15
-LFPARENTH            : 10 12 14 18 19 19
-OP                   : 16 17
-RGPARENTH            : 10 12 14 18 19 19
-SELECT               : 6 7 8 9
-STAR                 : 7 8
-TABLE                : 10
-TYPE                 : 11 12 13 14
-VALUES               : 18 19
-WHERE                : 8 9
+AND                  : 30
+CHAR                 : 25 27
+COLUMN               : 12 13 14 15 16 17 18 19 20 20 21 21 21 24 25 25 26 27 27 28 29 29 30 30 33 34
+COMMA                : 20 23 34
+CREATE               : 20 21
+DELETE               : 14 15
+DROP                 : 12 13
+END                  : 12 13 14 15 16 17 18 19 20 21 31 32
+EXIT                 : 11
+FROM                 : 14 15 16 17 18 19
+INDEX                : 13 21
+INSERT               : 28
+INTO                 : 28
+KEY                  : 20
+LFPARENTH            : 20 20 21 25 27 31 32 32
+ON                   : 21
+OP                   : 29 30
+PRIMARY              : 20
+RGPARENTH            : 20 20 21 25 27 31 32 32
+SELECT               : 16 17 18 19
+STAR                 : 17 18
+TABLE                : 12 20
+TYPE                 : 24 26
+UNIQUE               : 26 27
+VALUES               : 31 32
+WHERE                : 15 18 19
 error                : 
 
 Nonterminals, with rules where they appear
 
-columns              : 6 9 18 19 19 21
-exp_attribute        : 10 13 14
-exp_condition        : 8 9 17
-exp_create           : 4
-exp_insert           : 5
-exp_insert_end       : 15
-exp_select           : 3
+columns              : 16 19 31 32 32 34
+exp_attribute        : 22 23
+exp_attributes       : 20 23
+exp_condition        : 15 18 19 30
+exp_create_index     : 6
+exp_create_table     : 5
+exp_delete           : 10
+exp_drop_index       : 9
+exp_drop_table       : 8
+exp_exit             : 3
+exp_insert           : 7
+exp_insert_end       : 28
+exp_select           : 4
 expression           : 1 2
 expressions          : 2 0
 
@@ -65,48 +93,82 @@ state 0
     (0) S' -> . expressions
     (1) expressions -> . expression
     (2) expressions -> . expressions expression
-    (3) expression -> . exp_select
-    (4) expression -> . exp_create
-    (5) expression -> . exp_insert
-    (6) exp_select -> . SELECT columns FROM COLUMN END
-    (7) exp_select -> . SELECT STAR FROM COLUMN END
-    (8) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
-    (9) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
-    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
-    (15) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (3) expressions -> . exp_exit
+    (4) expression -> . exp_select
+    (5) expression -> . exp_create_table
+    (6) expression -> . exp_create_index
+    (7) expression -> . exp_insert
+    (8) expression -> . exp_drop_table
+    (9) expression -> . exp_drop_index
+    (10) expression -> . exp_delete
+    (11) exp_exit -> . EXIT
+    (16) exp_select -> . SELECT columns FROM COLUMN END
+    (17) exp_select -> . SELECT STAR FROM COLUMN END
+    (18) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
+    (19) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
+    (20) exp_create_table -> . CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (21) exp_create_index -> . CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END
+    (28) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (12) exp_drop_table -> . DROP TABLE COLUMN END
+    (13) exp_drop_index -> . DROP INDEX COLUMN END
+    (14) exp_delete -> . DELETE FROM COLUMN END
+    (15) exp_delete -> . DELETE FROM COLUMN WHERE exp_condition END
 
-    SELECT          shift and go to state 6
-    CREATE          shift and go to state 7
-    INSERT          shift and go to state 8
+    EXIT            shift and go to state 11
+    SELECT          shift and go to state 12
+    CREATE          shift and go to state 13
+    INSERT          shift and go to state 14
+    DROP            shift and go to state 15
+    DELETE          shift and go to state 16
 
     expressions                    shift and go to state 1
     expression                     shift and go to state 2
-    exp_select                     shift and go to state 3
-    exp_create                     shift and go to state 4
-    exp_insert                     shift and go to state 5
+    exp_exit                       shift and go to state 3
+    exp_select                     shift and go to state 4
+    exp_create_table               shift and go to state 5
+    exp_create_index               shift and go to state 6
+    exp_insert                     shift and go to state 7
+    exp_drop_table                 shift and go to state 8
+    exp_drop_index                 shift and go to state 9
+    exp_delete                     shift and go to state 10
 
 state 1
 
     (0) S' -> expressions .
     (2) expressions -> expressions . expression
-    (3) expression -> . exp_select
-    (4) expression -> . exp_create
-    (5) expression -> . exp_insert
-    (6) exp_select -> . SELECT columns FROM COLUMN END
-    (7) exp_select -> . SELECT STAR FROM COLUMN END
-    (8) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
-    (9) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
-    (10) exp_create -> . CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
-    (15) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (4) expression -> . exp_select
+    (5) expression -> . exp_create_table
+    (6) expression -> . exp_create_index
+    (7) expression -> . exp_insert
+    (8) expression -> . exp_drop_table
+    (9) expression -> . exp_drop_index
+    (10) expression -> . exp_delete
+    (16) exp_select -> . SELECT columns FROM COLUMN END
+    (17) exp_select -> . SELECT STAR FROM COLUMN END
+    (18) exp_select -> . SELECT STAR FROM COLUMN WHERE exp_condition END
+    (19) exp_select -> . SELECT columns FROM COLUMN WHERE exp_condition END
+    (20) exp_create_table -> . CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (21) exp_create_index -> . CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END
+    (28) exp_insert -> . INSERT INTO COLUMN exp_insert_end
+    (12) exp_drop_table -> . DROP TABLE COLUMN END
+    (13) exp_drop_index -> . DROP INDEX COLUMN END
+    (14) exp_delete -> . DELETE FROM COLUMN END
+    (15) exp_delete -> . DELETE FROM COLUMN WHERE exp_condition END
 
-    SELECT          shift and go to state 6
-    CREATE          shift and go to state 7
-    INSERT          shift and go to state 8
+    SELECT          shift and go to state 12
+    CREATE          shift and go to state 13
+    INSERT          shift and go to state 14
+    DROP            shift and go to state 15
+    DELETE          shift and go to state 16
 
-    expression                     shift and go to state 9
-    exp_select                     shift and go to state 3
-    exp_create                     shift and go to state 4
-    exp_insert                     shift and go to state 5
+    expression                     shift and go to state 17
+    exp_select                     shift and go to state 4
+    exp_create_table               shift and go to state 5
+    exp_create_index               shift and go to state 6
+    exp_insert                     shift and go to state 7
+    exp_drop_table                 shift and go to state 8
+    exp_drop_index                 shift and go to state 9
+    exp_delete                     shift and go to state 10
 
 state 2
 
@@ -115,536 +177,873 @@ state 2
     SELECT          reduce using rule 1 (expressions -> expression .)
     CREATE          reduce using rule 1 (expressions -> expression .)
     INSERT          reduce using rule 1 (expressions -> expression .)
+    DROP            reduce using rule 1 (expressions -> expression .)
+    DELETE          reduce using rule 1 (expressions -> expression .)
     $end            reduce using rule 1 (expressions -> expression .)
 
 
 state 3
 
-    (3) expression -> exp_select .
+    (3) expressions -> exp_exit .
 
-    SELECT          reduce using rule 3 (expression -> exp_select .)
-    CREATE          reduce using rule 3 (expression -> exp_select .)
-    INSERT          reduce using rule 3 (expression -> exp_select .)
-    $end            reduce using rule 3 (expression -> exp_select .)
+    SELECT          reduce using rule 3 (expressions -> exp_exit .)
+    CREATE          reduce using rule 3 (expressions -> exp_exit .)
+    INSERT          reduce using rule 3 (expressions -> exp_exit .)
+    DROP            reduce using rule 3 (expressions -> exp_exit .)
+    DELETE          reduce using rule 3 (expressions -> exp_exit .)
+    $end            reduce using rule 3 (expressions -> exp_exit .)
 
 
 state 4
 
-    (4) expression -> exp_create .
+    (4) expression -> exp_select .
 
-    SELECT          reduce using rule 4 (expression -> exp_create .)
-    CREATE          reduce using rule 4 (expression -> exp_create .)
-    INSERT          reduce using rule 4 (expression -> exp_create .)
-    $end            reduce using rule 4 (expression -> exp_create .)
+    SELECT          reduce using rule 4 (expression -> exp_select .)
+    CREATE          reduce using rule 4 (expression -> exp_select .)
+    INSERT          reduce using rule 4 (expression -> exp_select .)
+    DROP            reduce using rule 4 (expression -> exp_select .)
+    DELETE          reduce using rule 4 (expression -> exp_select .)
+    $end            reduce using rule 4 (expression -> exp_select .)
 
 
 state 5
 
-    (5) expression -> exp_insert .
+    (5) expression -> exp_create_table .
 
-    SELECT          reduce using rule 5 (expression -> exp_insert .)
-    CREATE          reduce using rule 5 (expression -> exp_insert .)
-    INSERT          reduce using rule 5 (expression -> exp_insert .)
-    $end            reduce using rule 5 (expression -> exp_insert .)
+    SELECT          reduce using rule 5 (expression -> exp_create_table .)
+    CREATE          reduce using rule 5 (expression -> exp_create_table .)
+    INSERT          reduce using rule 5 (expression -> exp_create_table .)
+    DROP            reduce using rule 5 (expression -> exp_create_table .)
+    DELETE          reduce using rule 5 (expression -> exp_create_table .)
+    $end            reduce using rule 5 (expression -> exp_create_table .)
 
 
 state 6
 
-    (6) exp_select -> SELECT . columns FROM COLUMN END
-    (7) exp_select -> SELECT . STAR FROM COLUMN END
-    (8) exp_select -> SELECT . STAR FROM COLUMN WHERE exp_condition END
-    (9) exp_select -> SELECT . columns FROM COLUMN WHERE exp_condition END
-    (20) columns -> . COLUMN
-    (21) columns -> . COLUMN COMMA columns
+    (6) expression -> exp_create_index .
 
-    STAR            shift and go to state 12
-    COLUMN          shift and go to state 11
+    SELECT          reduce using rule 6 (expression -> exp_create_index .)
+    CREATE          reduce using rule 6 (expression -> exp_create_index .)
+    INSERT          reduce using rule 6 (expression -> exp_create_index .)
+    DROP            reduce using rule 6 (expression -> exp_create_index .)
+    DELETE          reduce using rule 6 (expression -> exp_create_index .)
+    $end            reduce using rule 6 (expression -> exp_create_index .)
 
-    columns                        shift and go to state 10
 
 state 7
 
-    (10) exp_create -> CREATE . TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END
+    (7) expression -> exp_insert .
 
-    TABLE           shift and go to state 13
+    SELECT          reduce using rule 7 (expression -> exp_insert .)
+    CREATE          reduce using rule 7 (expression -> exp_insert .)
+    INSERT          reduce using rule 7 (expression -> exp_insert .)
+    DROP            reduce using rule 7 (expression -> exp_insert .)
+    DELETE          reduce using rule 7 (expression -> exp_insert .)
+    $end            reduce using rule 7 (expression -> exp_insert .)
 
 
 state 8
 
-    (15) exp_insert -> INSERT . INTO COLUMN exp_insert_end
+    (8) expression -> exp_drop_table .
 
-    INTO            shift and go to state 14
+    SELECT          reduce using rule 8 (expression -> exp_drop_table .)
+    CREATE          reduce using rule 8 (expression -> exp_drop_table .)
+    INSERT          reduce using rule 8 (expression -> exp_drop_table .)
+    DROP            reduce using rule 8 (expression -> exp_drop_table .)
+    DELETE          reduce using rule 8 (expression -> exp_drop_table .)
+    $end            reduce using rule 8 (expression -> exp_drop_table .)
 
 
 state 9
+
+    (9) expression -> exp_drop_index .
+
+    SELECT          reduce using rule 9 (expression -> exp_drop_index .)
+    CREATE          reduce using rule 9 (expression -> exp_drop_index .)
+    INSERT          reduce using rule 9 (expression -> exp_drop_index .)
+    DROP            reduce using rule 9 (expression -> exp_drop_index .)
+    DELETE          reduce using rule 9 (expression -> exp_drop_index .)
+    $end            reduce using rule 9 (expression -> exp_drop_index .)
+
+
+state 10
+
+    (10) expression -> exp_delete .
+
+    SELECT          reduce using rule 10 (expression -> exp_delete .)
+    CREATE          reduce using rule 10 (expression -> exp_delete .)
+    INSERT          reduce using rule 10 (expression -> exp_delete .)
+    DROP            reduce using rule 10 (expression -> exp_delete .)
+    DELETE          reduce using rule 10 (expression -> exp_delete .)
+    $end            reduce using rule 10 (expression -> exp_delete .)
+
+
+state 11
+
+    (11) exp_exit -> EXIT .
+
+    SELECT          reduce using rule 11 (exp_exit -> EXIT .)
+    CREATE          reduce using rule 11 (exp_exit -> EXIT .)
+    INSERT          reduce using rule 11 (exp_exit -> EXIT .)
+    DROP            reduce using rule 11 (exp_exit -> EXIT .)
+    DELETE          reduce using rule 11 (exp_exit -> EXIT .)
+    $end            reduce using rule 11 (exp_exit -> EXIT .)
+
+
+state 12
+
+    (16) exp_select -> SELECT . columns FROM COLUMN END
+    (17) exp_select -> SELECT . STAR FROM COLUMN END
+    (18) exp_select -> SELECT . STAR FROM COLUMN WHERE exp_condition END
+    (19) exp_select -> SELECT . columns FROM COLUMN WHERE exp_condition END
+    (33) columns -> . COLUMN
+    (34) columns -> . COLUMN COMMA columns
+
+    STAR            shift and go to state 20
+    COLUMN          shift and go to state 19
+
+    columns                        shift and go to state 18
+
+state 13
+
+    (20) exp_create_table -> CREATE . TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (21) exp_create_index -> CREATE . INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END
+
+    TABLE           shift and go to state 21
+    INDEX           shift and go to state 22
+
+
+state 14
+
+    (28) exp_insert -> INSERT . INTO COLUMN exp_insert_end
+
+    INTO            shift and go to state 23
+
+
+state 15
+
+    (12) exp_drop_table -> DROP . TABLE COLUMN END
+    (13) exp_drop_index -> DROP . INDEX COLUMN END
+
+    TABLE           shift and go to state 24
+    INDEX           shift and go to state 25
+
+
+state 16
+
+    (14) exp_delete -> DELETE . FROM COLUMN END
+    (15) exp_delete -> DELETE . FROM COLUMN WHERE exp_condition END
+
+    FROM            shift and go to state 26
+
+
+state 17
 
     (2) expressions -> expressions expression .
 
     SELECT          reduce using rule 2 (expressions -> expressions expression .)
     CREATE          reduce using rule 2 (expressions -> expressions expression .)
     INSERT          reduce using rule 2 (expressions -> expressions expression .)
+    DROP            reduce using rule 2 (expressions -> expressions expression .)
+    DELETE          reduce using rule 2 (expressions -> expressions expression .)
     $end            reduce using rule 2 (expressions -> expressions expression .)
-
-
-state 10
-
-    (6) exp_select -> SELECT columns . FROM COLUMN END
-    (9) exp_select -> SELECT columns . FROM COLUMN WHERE exp_condition END
-
-    FROM            shift and go to state 15
-
-
-state 11
-
-    (20) columns -> COLUMN .
-    (21) columns -> COLUMN . COMMA columns
-
-    FROM            reduce using rule 20 (columns -> COLUMN .)
-    RGPARENTH       reduce using rule 20 (columns -> COLUMN .)
-    COMMA           shift and go to state 16
-
-
-state 12
-
-    (7) exp_select -> SELECT STAR . FROM COLUMN END
-    (8) exp_select -> SELECT STAR . FROM COLUMN WHERE exp_condition END
-
-    FROM            shift and go to state 17
-
-
-state 13
-
-    (10) exp_create -> CREATE TABLE . COLUMN LFPARENTH exp_attribute RGPARENTH END
-
-    COLUMN          shift and go to state 18
-
-
-state 14
-
-    (15) exp_insert -> INSERT INTO . COLUMN exp_insert_end
-
-    COLUMN          shift and go to state 19
-
-
-state 15
-
-    (6) exp_select -> SELECT columns FROM . COLUMN END
-    (9) exp_select -> SELECT columns FROM . COLUMN WHERE exp_condition END
-
-    COLUMN          shift and go to state 20
-
-
-state 16
-
-    (21) columns -> COLUMN COMMA . columns
-    (20) columns -> . COLUMN
-    (21) columns -> . COLUMN COMMA columns
-
-    COLUMN          shift and go to state 11
-
-    columns                        shift and go to state 21
-
-state 17
-
-    (7) exp_select -> SELECT STAR FROM . COLUMN END
-    (8) exp_select -> SELECT STAR FROM . COLUMN WHERE exp_condition END
-
-    COLUMN          shift and go to state 22
 
 
 state 18
 
-    (10) exp_create -> CREATE TABLE COLUMN . LFPARENTH exp_attribute RGPARENTH END
+    (16) exp_select -> SELECT columns . FROM COLUMN END
+    (19) exp_select -> SELECT columns . FROM COLUMN WHERE exp_condition END
 
-    LFPARENTH       shift and go to state 23
+    FROM            shift and go to state 27
 
 
 state 19
 
-    (15) exp_insert -> INSERT INTO COLUMN . exp_insert_end
-    (18) exp_insert_end -> . VALUES LFPARENTH columns RGPARENTH END
-    (19) exp_insert_end -> . LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+    (33) columns -> COLUMN .
+    (34) columns -> COLUMN . COMMA columns
 
-    VALUES          shift and go to state 25
-    LFPARENTH       shift and go to state 26
+    FROM            reduce using rule 33 (columns -> COLUMN .)
+    RGPARENTH       reduce using rule 33 (columns -> COLUMN .)
+    COMMA           shift and go to state 28
 
-    exp_insert_end                 shift and go to state 24
 
 state 20
 
-    (6) exp_select -> SELECT columns FROM COLUMN . END
-    (9) exp_select -> SELECT columns FROM COLUMN . WHERE exp_condition END
+    (17) exp_select -> SELECT STAR . FROM COLUMN END
+    (18) exp_select -> SELECT STAR . FROM COLUMN WHERE exp_condition END
 
-    END             shift and go to state 27
-    WHERE           shift and go to state 28
+    FROM            shift and go to state 29
 
 
 state 21
 
-    (21) columns -> COLUMN COMMA columns .
+    (20) exp_create_table -> CREATE TABLE . COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
 
-    FROM            reduce using rule 21 (columns -> COLUMN COMMA columns .)
-    RGPARENTH       reduce using rule 21 (columns -> COLUMN COMMA columns .)
+    COLUMN          shift and go to state 30
 
 
 state 22
 
-    (7) exp_select -> SELECT STAR FROM COLUMN . END
-    (8) exp_select -> SELECT STAR FROM COLUMN . WHERE exp_condition END
+    (21) exp_create_index -> CREATE INDEX . COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END
 
-    END             shift and go to state 29
-    WHERE           shift and go to state 30
+    COLUMN          shift and go to state 31
 
 
 state 23
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH . exp_attribute RGPARENTH END
-    (11) exp_attribute -> . COLUMN TYPE
-    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
-    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
-    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+    (28) exp_insert -> INSERT INTO . COLUMN exp_insert_end
 
-    COLUMN          shift and go to state 31
+    COLUMN          shift and go to state 32
 
-    exp_attribute                  shift and go to state 32
 
 state 24
 
-    (15) exp_insert -> INSERT INTO COLUMN exp_insert_end .
+    (12) exp_drop_table -> DROP TABLE . COLUMN END
 
-    SELECT          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    CREATE          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    INSERT          reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
-    $end            reduce using rule 15 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    COLUMN          shift and go to state 33
 
 
 state 25
 
-    (18) exp_insert_end -> VALUES . LFPARENTH columns RGPARENTH END
+    (13) exp_drop_index -> DROP INDEX . COLUMN END
 
-    LFPARENTH       shift and go to state 33
+    COLUMN          shift and go to state 34
 
 
 state 26
 
-    (19) exp_insert_end -> LFPARENTH . columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
-    (20) columns -> . COLUMN
-    (21) columns -> . COLUMN COMMA columns
+    (14) exp_delete -> DELETE FROM . COLUMN END
+    (15) exp_delete -> DELETE FROM . COLUMN WHERE exp_condition END
 
-    COLUMN          shift and go to state 11
+    COLUMN          shift and go to state 35
 
-    columns                        shift and go to state 34
 
 state 27
 
-    (6) exp_select -> SELECT columns FROM COLUMN END .
+    (16) exp_select -> SELECT columns FROM . COLUMN END
+    (19) exp_select -> SELECT columns FROM . COLUMN WHERE exp_condition END
 
-    SELECT          reduce using rule 6 (exp_select -> SELECT columns FROM COLUMN END .)
-    CREATE          reduce using rule 6 (exp_select -> SELECT columns FROM COLUMN END .)
-    INSERT          reduce using rule 6 (exp_select -> SELECT columns FROM COLUMN END .)
-    $end            reduce using rule 6 (exp_select -> SELECT columns FROM COLUMN END .)
+    COLUMN          shift and go to state 36
 
 
 state 28
 
-    (9) exp_select -> SELECT columns FROM COLUMN WHERE . exp_condition END
-    (16) exp_condition -> . COLUMN OP COLUMN
-    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+    (34) columns -> COLUMN COMMA . columns
+    (33) columns -> . COLUMN
+    (34) columns -> . COLUMN COMMA columns
 
-    COLUMN          shift and go to state 35
+    COLUMN          shift and go to state 19
 
-    exp_condition                  shift and go to state 36
+    columns                        shift and go to state 37
 
 state 29
 
-    (7) exp_select -> SELECT STAR FROM COLUMN END .
+    (17) exp_select -> SELECT STAR FROM . COLUMN END
+    (18) exp_select -> SELECT STAR FROM . COLUMN WHERE exp_condition END
 
-    SELECT          reduce using rule 7 (exp_select -> SELECT STAR FROM COLUMN END .)
-    CREATE          reduce using rule 7 (exp_select -> SELECT STAR FROM COLUMN END .)
-    INSERT          reduce using rule 7 (exp_select -> SELECT STAR FROM COLUMN END .)
-    $end            reduce using rule 7 (exp_select -> SELECT STAR FROM COLUMN END .)
+    COLUMN          shift and go to state 38
 
 
 state 30
 
-    (8) exp_select -> SELECT STAR FROM COLUMN WHERE . exp_condition END
-    (16) exp_condition -> . COLUMN OP COLUMN
-    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+    (20) exp_create_table -> CREATE TABLE COLUMN . LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
 
-    COLUMN          shift and go to state 35
+    LFPARENTH       shift and go to state 39
 
-    exp_condition                  shift and go to state 37
 
 state 31
 
-    (11) exp_attribute -> COLUMN . TYPE
-    (12) exp_attribute -> COLUMN . TYPE LFPARENTH COLUMN RGPARENTH
-    (13) exp_attribute -> COLUMN . TYPE COMMA exp_attribute
-    (14) exp_attribute -> COLUMN . TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+    (21) exp_create_index -> CREATE INDEX COLUMN . ON COLUMN LFPARENTH COLUMN RGPARENTH END
 
-    TYPE            shift and go to state 38
+    ON              shift and go to state 40
 
 
 state 32
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute . RGPARENTH END
+    (28) exp_insert -> INSERT INTO COLUMN . exp_insert_end
+    (31) exp_insert_end -> . VALUES LFPARENTH columns RGPARENTH END
+    (32) exp_insert_end -> . LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
 
-    RGPARENTH       shift and go to state 39
+    VALUES          shift and go to state 42
+    LFPARENTH       shift and go to state 43
 
+    exp_insert_end                 shift and go to state 41
 
 state 33
 
-    (18) exp_insert_end -> VALUES LFPARENTH . columns RGPARENTH END
-    (20) columns -> . COLUMN
-    (21) columns -> . COLUMN COMMA columns
-
-    COLUMN          shift and go to state 11
-
-    columns                        shift and go to state 40
-
-state 34
-
-    (19) exp_insert_end -> LFPARENTH columns . RGPARENTH VALUES LFPARENTH columns RGPARENTH END
-
-    RGPARENTH       shift and go to state 41
-
-
-state 35
-
-    (16) exp_condition -> COLUMN . OP COLUMN
-    (17) exp_condition -> COLUMN . OP COLUMN AND exp_condition
-
-    OP              shift and go to state 42
-
-
-state 36
-
-    (9) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition . END
-
-    END             shift and go to state 43
-
-
-state 37
-
-    (8) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition . END
+    (12) exp_drop_table -> DROP TABLE COLUMN . END
 
     END             shift and go to state 44
 
 
+state 34
+
+    (13) exp_drop_index -> DROP INDEX COLUMN . END
+
+    END             shift and go to state 45
+
+
+state 35
+
+    (14) exp_delete -> DELETE FROM COLUMN . END
+    (15) exp_delete -> DELETE FROM COLUMN . WHERE exp_condition END
+
+    END             shift and go to state 46
+    WHERE           shift and go to state 47
+
+
+state 36
+
+    (16) exp_select -> SELECT columns FROM COLUMN . END
+    (19) exp_select -> SELECT columns FROM COLUMN . WHERE exp_condition END
+
+    END             shift and go to state 48
+    WHERE           shift and go to state 49
+
+
+state 37
+
+    (34) columns -> COLUMN COMMA columns .
+
+    FROM            reduce using rule 34 (columns -> COLUMN COMMA columns .)
+    RGPARENTH       reduce using rule 34 (columns -> COLUMN COMMA columns .)
+
+
 state 38
 
-    (11) exp_attribute -> COLUMN TYPE .
-    (12) exp_attribute -> COLUMN TYPE . LFPARENTH COLUMN RGPARENTH
-    (13) exp_attribute -> COLUMN TYPE . COMMA exp_attribute
-    (14) exp_attribute -> COLUMN TYPE . LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+    (17) exp_select -> SELECT STAR FROM COLUMN . END
+    (18) exp_select -> SELECT STAR FROM COLUMN . WHERE exp_condition END
 
-    RGPARENTH       reduce using rule 11 (exp_attribute -> COLUMN TYPE .)
-    LFPARENTH       shift and go to state 45
-    COMMA           shift and go to state 46
+    END             shift and go to state 50
+    WHERE           shift and go to state 51
 
 
 state 39
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH . END
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH . exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (22) exp_attributes -> . exp_attribute
+    (23) exp_attributes -> . exp_attributes COMMA exp_attribute
+    (24) exp_attribute -> . COLUMN TYPE
+    (25) exp_attribute -> . COLUMN CHAR LFPARENTH COLUMN RGPARENTH
+    (26) exp_attribute -> . COLUMN TYPE UNIQUE
+    (27) exp_attribute -> . COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE
 
-    END             shift and go to state 47
+    COLUMN          shift and go to state 52
 
+    exp_attributes                 shift and go to state 53
+    exp_attribute                  shift and go to state 54
 
 state 40
 
-    (18) exp_insert_end -> VALUES LFPARENTH columns . RGPARENTH END
+    (21) exp_create_index -> CREATE INDEX COLUMN ON . COLUMN LFPARENTH COLUMN RGPARENTH END
 
-    RGPARENTH       shift and go to state 48
+    COLUMN          shift and go to state 55
 
 
 state 41
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH . VALUES LFPARENTH columns RGPARENTH END
+    (28) exp_insert -> INSERT INTO COLUMN exp_insert_end .
 
-    VALUES          shift and go to state 49
+    SELECT          reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    CREATE          reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    INSERT          reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    DROP            reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    DELETE          reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
+    $end            reduce using rule 28 (exp_insert -> INSERT INTO COLUMN exp_insert_end .)
 
 
 state 42
 
-    (16) exp_condition -> COLUMN OP . COLUMN
-    (17) exp_condition -> COLUMN OP . COLUMN AND exp_condition
+    (31) exp_insert_end -> VALUES . LFPARENTH columns RGPARENTH END
 
-    COLUMN          shift and go to state 50
+    LFPARENTH       shift and go to state 56
 
 
 state 43
 
-    (9) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .
+    (32) exp_insert_end -> LFPARENTH . columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END
+    (33) columns -> . COLUMN
+    (34) columns -> . COLUMN COMMA columns
 
-    SELECT          reduce using rule 9 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
-    CREATE          reduce using rule 9 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
-    INSERT          reduce using rule 9 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
-    $end            reduce using rule 9 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    COLUMN          shift and go to state 19
 
+    columns                        shift and go to state 57
 
 state 44
 
-    (8) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .
+    (12) exp_drop_table -> DROP TABLE COLUMN END .
 
-    SELECT          reduce using rule 8 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
-    CREATE          reduce using rule 8 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
-    INSERT          reduce using rule 8 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
-    $end            reduce using rule 8 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    SELECT          reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
+    CREATE          reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
+    INSERT          reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
+    DROP            reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
+    DELETE          reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
+    $end            reduce using rule 12 (exp_drop_table -> DROP TABLE COLUMN END .)
 
 
 state 45
 
-    (12) exp_attribute -> COLUMN TYPE LFPARENTH . COLUMN RGPARENTH
-    (14) exp_attribute -> COLUMN TYPE LFPARENTH . COLUMN RGPARENTH COMMA exp_attribute
+    (13) exp_drop_index -> DROP INDEX COLUMN END .
 
-    COLUMN          shift and go to state 51
+    SELECT          reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
+    CREATE          reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
+    INSERT          reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
+    DROP            reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
+    DELETE          reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
+    $end            reduce using rule 13 (exp_drop_index -> DROP INDEX COLUMN END .)
 
 
 state 46
 
-    (13) exp_attribute -> COLUMN TYPE COMMA . exp_attribute
-    (11) exp_attribute -> . COLUMN TYPE
-    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
-    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
-    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+    (14) exp_delete -> DELETE FROM COLUMN END .
 
-    COLUMN          shift and go to state 31
+    SELECT          reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
+    CREATE          reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
+    INSERT          reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
+    DROP            reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
+    DELETE          reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
+    $end            reduce using rule 14 (exp_delete -> DELETE FROM COLUMN END .)
 
-    exp_attribute                  shift and go to state 52
 
 state 47
 
-    (10) exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .
+    (15) exp_delete -> DELETE FROM COLUMN WHERE . exp_condition END
+    (29) exp_condition -> . COLUMN OP COLUMN
+    (30) exp_condition -> . COLUMN OP COLUMN AND exp_condition
 
-    SELECT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
-    CREATE          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
-    INSERT          reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
-    $end            reduce using rule 10 (exp_create -> CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END .)
+    COLUMN          shift and go to state 58
 
+    exp_condition                  shift and go to state 59
 
 state 48
 
-    (18) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH . END
+    (16) exp_select -> SELECT columns FROM COLUMN END .
 
-    END             shift and go to state 53
+    SELECT          reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
+    CREATE          reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
+    INSERT          reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
+    DROP            reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
+    DELETE          reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
+    $end            reduce using rule 16 (exp_select -> SELECT columns FROM COLUMN END .)
 
 
 state 49
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES . LFPARENTH columns RGPARENTH END
+    (19) exp_select -> SELECT columns FROM COLUMN WHERE . exp_condition END
+    (29) exp_condition -> . COLUMN OP COLUMN
+    (30) exp_condition -> . COLUMN OP COLUMN AND exp_condition
 
-    LFPARENTH       shift and go to state 54
+    COLUMN          shift and go to state 58
 
+    exp_condition                  shift and go to state 60
 
 state 50
 
-    (16) exp_condition -> COLUMN OP COLUMN .
-    (17) exp_condition -> COLUMN OP COLUMN . AND exp_condition
+    (17) exp_select -> SELECT STAR FROM COLUMN END .
 
-    END             reduce using rule 16 (exp_condition -> COLUMN OP COLUMN .)
-    AND             shift and go to state 55
+    SELECT          reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
+    CREATE          reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
+    INSERT          reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
+    DROP            reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
+    DELETE          reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
+    $end            reduce using rule 17 (exp_select -> SELECT STAR FROM COLUMN END .)
 
 
 state 51
 
-    (12) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN . RGPARENTH
-    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN . RGPARENTH COMMA exp_attribute
+    (18) exp_select -> SELECT STAR FROM COLUMN WHERE . exp_condition END
+    (29) exp_condition -> . COLUMN OP COLUMN
+    (30) exp_condition -> . COLUMN OP COLUMN AND exp_condition
 
-    RGPARENTH       shift and go to state 56
+    COLUMN          shift and go to state 58
 
+    exp_condition                  shift and go to state 61
 
 state 52
 
-    (13) exp_attribute -> COLUMN TYPE COMMA exp_attribute .
+    (24) exp_attribute -> COLUMN . TYPE
+    (25) exp_attribute -> COLUMN . CHAR LFPARENTH COLUMN RGPARENTH
+    (26) exp_attribute -> COLUMN . TYPE UNIQUE
+    (27) exp_attribute -> COLUMN . CHAR LFPARENTH COLUMN RGPARENTH UNIQUE
 
-    RGPARENTH       reduce using rule 13 (exp_attribute -> COLUMN TYPE COMMA exp_attribute .)
+    TYPE            shift and go to state 62
+    CHAR            shift and go to state 63
 
 
 state 53
 
-    (18) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes . COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (23) exp_attributes -> exp_attributes . COMMA exp_attribute
 
-    SELECT          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    CREATE          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    INSERT          reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
-    $end            reduce using rule 18 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    COMMA           shift and go to state 64
 
 
 state 54
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH . columns RGPARENTH END
-    (20) columns -> . COLUMN
-    (21) columns -> . COLUMN COMMA columns
+    (22) exp_attributes -> exp_attribute .
 
-    COLUMN          shift and go to state 11
+    COMMA           reduce using rule 22 (exp_attributes -> exp_attribute .)
 
-    columns                        shift and go to state 57
 
 state 55
 
-    (17) exp_condition -> COLUMN OP COLUMN AND . exp_condition
-    (16) exp_condition -> . COLUMN OP COLUMN
-    (17) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+    (21) exp_create_index -> CREATE INDEX COLUMN ON COLUMN . LFPARENTH COLUMN RGPARENTH END
 
-    COLUMN          shift and go to state 35
+    LFPARENTH       shift and go to state 65
 
-    exp_condition                  shift and go to state 58
 
 state 56
 
-    (12) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH .
-    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH . COMMA exp_attribute
+    (31) exp_insert_end -> VALUES LFPARENTH . columns RGPARENTH END
+    (33) columns -> . COLUMN
+    (34) columns -> . COLUMN COMMA columns
 
-    RGPARENTH       reduce using rule 12 (exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH .)
-    COMMA           shift and go to state 59
+    COLUMN          shift and go to state 19
 
+    columns                        shift and go to state 66
 
 state 57
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns . RGPARENTH END
+    (32) exp_insert_end -> LFPARENTH columns . RGPARENTH VALUES LFPARENTH columns RGPARENTH END
 
-    RGPARENTH       shift and go to state 60
+    RGPARENTH       shift and go to state 67
 
 
 state 58
 
-    (17) exp_condition -> COLUMN OP COLUMN AND exp_condition .
+    (29) exp_condition -> COLUMN . OP COLUMN
+    (30) exp_condition -> COLUMN . OP COLUMN AND exp_condition
 
-    END             reduce using rule 17 (exp_condition -> COLUMN OP COLUMN AND exp_condition .)
+    OP              shift and go to state 68
 
 
 state 59
 
-    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA . exp_attribute
-    (11) exp_attribute -> . COLUMN TYPE
-    (12) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH
-    (13) exp_attribute -> . COLUMN TYPE COMMA exp_attribute
-    (14) exp_attribute -> . COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute
+    (15) exp_delete -> DELETE FROM COLUMN WHERE exp_condition . END
 
-    COLUMN          shift and go to state 31
+    END             shift and go to state 69
 
-    exp_attribute                  shift and go to state 61
 
 state 60
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH . END
+    (19) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition . END
 
-    END             shift and go to state 62
+    END             shift and go to state 70
 
 
 state 61
 
-    (14) exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute .
+    (18) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition . END
 
-    RGPARENTH       reduce using rule 14 (exp_attribute -> COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute .)
+    END             shift and go to state 71
 
 
 state 62
 
-    (19) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .
+    (24) exp_attribute -> COLUMN TYPE .
+    (26) exp_attribute -> COLUMN TYPE . UNIQUE
 
-    SELECT          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    CREATE          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    INSERT          reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
-    $end            reduce using rule 19 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    COMMA           reduce using rule 24 (exp_attribute -> COLUMN TYPE .)
+    UNIQUE          shift and go to state 72
+
+
+state 63
+
+    (25) exp_attribute -> COLUMN CHAR . LFPARENTH COLUMN RGPARENTH
+    (27) exp_attribute -> COLUMN CHAR . LFPARENTH COLUMN RGPARENTH UNIQUE
+
+    LFPARENTH       shift and go to state 73
+
+
+state 64
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA . PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+    (23) exp_attributes -> exp_attributes COMMA . exp_attribute
+    (24) exp_attribute -> . COLUMN TYPE
+    (25) exp_attribute -> . COLUMN CHAR LFPARENTH COLUMN RGPARENTH
+    (26) exp_attribute -> . COLUMN TYPE UNIQUE
+    (27) exp_attribute -> . COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE
+
+    PRIMARY         shift and go to state 74
+    COLUMN          shift and go to state 52
+
+    exp_attribute                  shift and go to state 75
+
+state 65
+
+    (21) exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH . COLUMN RGPARENTH END
+
+    COLUMN          shift and go to state 76
+
+
+state 66
+
+    (31) exp_insert_end -> VALUES LFPARENTH columns . RGPARENTH END
+
+    RGPARENTH       shift and go to state 77
+
+
+state 67
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH . VALUES LFPARENTH columns RGPARENTH END
+
+    VALUES          shift and go to state 78
+
+
+state 68
+
+    (29) exp_condition -> COLUMN OP . COLUMN
+    (30) exp_condition -> COLUMN OP . COLUMN AND exp_condition
+
+    COLUMN          shift and go to state 79
+
+
+state 69
+
+    (15) exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .
+
+    SELECT          reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+    CREATE          reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+    INSERT          reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+    DROP            reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+    DELETE          reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+    $end            reduce using rule 15 (exp_delete -> DELETE FROM COLUMN WHERE exp_condition END .)
+
+
+state 70
+
+    (19) exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .
+
+    SELECT          reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    CREATE          reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    INSERT          reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    DROP            reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    DELETE          reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+    $end            reduce using rule 19 (exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END .)
+
+
+state 71
+
+    (18) exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .
+
+    SELECT          reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    CREATE          reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    INSERT          reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    DROP            reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    DELETE          reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+    $end            reduce using rule 18 (exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END .)
+
+
+state 72
+
+    (26) exp_attribute -> COLUMN TYPE UNIQUE .
+
+    COMMA           reduce using rule 26 (exp_attribute -> COLUMN TYPE UNIQUE .)
+
+
+state 73
+
+    (25) exp_attribute -> COLUMN CHAR LFPARENTH . COLUMN RGPARENTH
+    (27) exp_attribute -> COLUMN CHAR LFPARENTH . COLUMN RGPARENTH UNIQUE
+
+    COLUMN          shift and go to state 80
+
+
+state 74
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY . KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END
+
+    KEY             shift and go to state 81
+
+
+state 75
+
+    (23) exp_attributes -> exp_attributes COMMA exp_attribute .
+
+    COMMA           reduce using rule 23 (exp_attributes -> exp_attributes COMMA exp_attribute .)
+
+
+state 76
+
+    (21) exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN . RGPARENTH END
+
+    RGPARENTH       shift and go to state 82
+
+
+state 77
+
+    (31) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH . END
+
+    END             shift and go to state 83
+
+
+state 78
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES . LFPARENTH columns RGPARENTH END
+
+    LFPARENTH       shift and go to state 84
+
+
+state 79
+
+    (29) exp_condition -> COLUMN OP COLUMN .
+    (30) exp_condition -> COLUMN OP COLUMN . AND exp_condition
+
+    END             reduce using rule 29 (exp_condition -> COLUMN OP COLUMN .)
+    AND             shift and go to state 85
+
+
+state 80
+
+    (25) exp_attribute -> COLUMN CHAR LFPARENTH COLUMN . RGPARENTH
+    (27) exp_attribute -> COLUMN CHAR LFPARENTH COLUMN . RGPARENTH UNIQUE
+
+    RGPARENTH       shift and go to state 86
+
+
+state 81
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY . LFPARENTH COLUMN RGPARENTH RGPARENTH END
+
+    LFPARENTH       shift and go to state 87
+
+
+state 82
+
+    (21) exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH . END
+
+    END             shift and go to state 88
+
+
+state 83
+
+    (31) exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .
+
+    SELECT          reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    CREATE          reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    INSERT          reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    DROP            reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    DELETE          reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+    $end            reduce using rule 31 (exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END .)
+
+
+state 84
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH . columns RGPARENTH END
+    (33) columns -> . COLUMN
+    (34) columns -> . COLUMN COMMA columns
+
+    COLUMN          shift and go to state 19
+
+    columns                        shift and go to state 89
+
+state 85
+
+    (30) exp_condition -> COLUMN OP COLUMN AND . exp_condition
+    (29) exp_condition -> . COLUMN OP COLUMN
+    (30) exp_condition -> . COLUMN OP COLUMN AND exp_condition
+
+    COLUMN          shift and go to state 58
+
+    exp_condition                  shift and go to state 90
+
+state 86
+
+    (25) exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH .
+    (27) exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH . UNIQUE
+
+    COMMA           reduce using rule 25 (exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH .)
+    UNIQUE          shift and go to state 91
+
+
+state 87
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH . COLUMN RGPARENTH RGPARENTH END
+
+    COLUMN          shift and go to state 92
+
+
+state 88
+
+    (21) exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .
+
+    SELECT          reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+    CREATE          reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+    INSERT          reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+    DROP            reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+    DELETE          reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+    $end            reduce using rule 21 (exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END .)
+
+
+state 89
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns . RGPARENTH END
+
+    RGPARENTH       shift and go to state 93
+
+
+state 90
+
+    (30) exp_condition -> COLUMN OP COLUMN AND exp_condition .
+
+    END             reduce using rule 30 (exp_condition -> COLUMN OP COLUMN AND exp_condition .)
+
+
+state 91
+
+    (27) exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE .
+
+    COMMA           reduce using rule 27 (exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE .)
+
+
+state 92
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN . RGPARENTH RGPARENTH END
+
+    RGPARENTH       shift and go to state 94
+
+
+state 93
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH . END
+
+    END             shift and go to state 95
+
+
+state 94
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH . RGPARENTH END
+
+    RGPARENTH       shift and go to state 96
+
+
+state 95
+
+    (32) exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .
+
+    SELECT          reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    CREATE          reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    INSERT          reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    DROP            reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    DELETE          reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+    $end            reduce using rule 32 (exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END .)
+
+
+state 96
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH . END
+
+    END             shift and go to state 97
+
+
+state 97
+
+    (20) exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .
+
+    SELECT          reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
+    CREATE          reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
+    INSERT          reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
+    DROP            reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
+    DELETE          reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
+    $end            reduce using rule 20 (exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END .)
 

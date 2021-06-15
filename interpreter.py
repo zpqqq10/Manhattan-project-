@@ -24,7 +24,16 @@ tokens = (
     'STAR',
     "END",
     "OP",
-    "TYPE"
+    "TYPE",
+    "EXIT",
+    "PRIMARY",
+    "UNIQUE",
+    "CHAR",
+    "KEY",
+    "DROP",
+    "DELETE",
+    "INDEX",
+    "ON"
 )
 
 
@@ -46,11 +55,18 @@ t_COMMA = r','
 t_STAR = r'\*'
 t_END = r';'
 t_OP = r'>|<|>=|<=|='
-t_TYPE = r'INT|CHAR|FLOAT|int|char|float'
-
-
+t_TYPE = r'INT|FLOAT|int|float'
+t_CHAR = r'CHAR|char'
+t_EXIT = r'QUIT|quit|EXIT|exit'
+t_PRIMARY = r'primary|PRIMARY'
+t_KEY = r'KEY|key'
+t_UNIQUE = r'UNIQUE|unique'
+t_DROP = r'DROP|drop'
+t_DELETE = r'DELETE|delete'
+t_INDEX = r'index|INDEX'
+t_ON = r'ON|on'
 def t_COLUMN(t):
-    r'[a-zA-Z0-9/.-]+'
+    r'[a-zA-Z0-9/_.-]+'
     if t.value in ['FROM', 'from']:
         t.type = 'FROM'
     if t.value in ['CREATE', 'create']:
@@ -73,8 +89,26 @@ def t_COLUMN(t):
         t.type = 'SELECT'
     if t.value in ['AND', 'and']:
         t.type = 'AND'
-    if t.value in ['INT','int','FLOAT','float','char','CHAR']:
+    if t.value in ['INT','int','FLOAT','float']:
         t.type = 'TYPE'
+    if t.value in ['char','CHAR']:
+        t.type = 'CHAR'
+    if t.value in ['QUIT','quit','EXIT','exit']:
+        t.type = 'EXIT'
+    if t.value in ['PRIMARY','primary']:
+        t.type = 'PRIMARY'
+    if t.value in ['KEY','key']:
+        t.type = 'KEY'
+    if t.value in ['UNIQUE','unique']:
+        t.type = 'UNIQUE'
+    if t.value in ['DROP','drop']:
+        t.type = 'DROP'
+    if t.value in ['DELETE','delete']:
+        t.type = 'DELETE'
+    if t.value in ['ON','on']:
+        t.type = 'ON'
+    if t.value in ['index','INDEX']:
+        t.type = 'INDEX'
     return t
 
 
@@ -164,33 +198,61 @@ class Select(object):
 
     def action(self):
         """展示数据"""
-        if self.table not in catalog.tables.keys():
-            print("table {0} not exists")
-            return
-
         print("self.values",self.columns,self.conditions)
 
-
-
-class Create(object):
+class Delete(object):
 
     def __init__(self):
-        self.values = []
+        self.columns = []
+        self.conditions = []
         self.table = None
 
     def set_table(self, table):
         self.table = table
+        return table in catalog.tables.keys()
+
+    def add_conditions(self,condition_stack):
+        [self.conditions.append(v) for v in condition_stack if v not in self.conditions]
+    def action(self):
+        """展示数据"""
+
+        print("self.values",self.conditions)
+
+class Create(object):
+    def __init__(self):
+        self.values = []
+        self.table = None
+        self.primary = ""
+        self.attr = None
+        self.is_Index = False
+        self.skip = False
+    def set_table(self, table):
+        self.table = table
         return table not in catalog.tables.keys()
         # return table not in datas
-
+    def set_index(self,index):
+        self.index = index
+        return index not in catalog.indices.keys()
+    def set_attr(self,attr):
+        self.attr = attr
+        return attr in [item.name for item in catalog.tables[self.table].attributes]
     def add_stack(self, stack):
         [self.add_values(v) for v in stack if v not in self.values]
 
     def add_values(self, value):
         self.values.append(value)
-
-    def action(self):
-        print("create : ", self.values,"table : ",self.table)
+    def set_primary(self,value):
+        self.primary = value
+    def action(self): 
+        # the last value of the attribute tuple is whether the attribute is unique 
+        if self.is_Index:
+            print("Create Index:",self.table,self.index,self.attr)
+        else:
+            attr = [item[0] for item in self.values]
+            if self.primary not in attr:
+                print("error PRIMARY KEY")
+                return
+            print("create : ", self.values,"table : ",self.table)
 
 class Insert(object):
 
@@ -199,7 +261,7 @@ class Insert(object):
         self.columns = set()
         self.table = None
         self._stack = None
-
+        self.skip = False
     def set_table(self, table):
         self.table = table
         return table not in catalog.tables.keys()
@@ -229,14 +291,30 @@ class Insert(object):
                 return
             self._stack._stack.reverse()
             print(self._stack)
-
+class Drop(object):
+    def __init__(self):
+        self.table = None
+        self.index = None
+    def set_table(self, table):
+        self.table = table
+        return table in catalog.tables.keys()
+    def set_index(self,index):
+        self.index = index
+        return index in catalog.indices.keys()
+    def action(self):
+        global catalog
+        if self.table and self.table in catalog.tables.keys():
+            print(self.table)
+        if self.index and self.index in catalog.indices.keys():
+            print(self.index)
 
 
 
 
 def p_statement_expr(t):
     '''expressions : expression
-                    | expressions expression'''
+                    | expressions expression
+                    | exp_exit'''
     if current_action:
         current_action.action()
     reset_action()
@@ -244,46 +322,111 @@ def p_statement_expr(t):
 
 def p_expression_start(t):
     '''expression :  exp_select
-                    | exp_create
-                    | exp_insert'''
-
+                    | exp_create_table
+                    | exp_create_index
+                    | exp_insert
+                    | exp_drop_table
+                    | exp_drop_index
+                    | exp_delete'''
+def p_expression_exit(t):
+    ''' exp_exit : EXIT'''
+    print("Goodbye")
+    # a close method in api,commit the buffer and so on 
+    exit()
+def p_expression_drop_table(t):
+    '''exp_drop_table : DROP TABLE COLUMN END'''
+    global current_action
+    current_action = Drop()
+    if not current_action.set_table(t[3]):
+        print("{0} table not exists".format(t[3]))
+        reset_action()
+        return
+def p_expression_drop_index(t):
+    '''exp_drop_index : DROP INDEX COLUMN END'''
+    global current_action
+    current_action = Drop()
+    if not current_action.set_index(t[3]):
+        print("{0} index not exists".format(t[3]))
+        reset_action()
+        return
+def p_expression_delete(t):
+    '''exp_delete : DELETE  FROM COLUMN END
+                    | DELETE  FROM COLUMN WHERE exp_condition END'''
+    global current_action
+    current_action = Delete()
+    if not current_action.set_table(t[3]):
+        print("{0} table not exists".format(t[3]))
+        reset_action()
+        return
+    if t[4] == "where":
+        current_action.add_conditions(condition_stack)
 
 def p_expression_select(t):
     '''exp_select : SELECT columns FROM COLUMN END
                     | SELECT STAR FROM COLUMN END
                     | SELECT STAR FROM COLUMN WHERE exp_condition END
                     | SELECT columns FROM COLUMN WHERE exp_condition END'''
-    print(t[1], t[2],t[3],t[4],t[5])
     global current_action
     current_action = Select()
     if not current_action.set_table(t[4]):
         print("{0} table not exists".format(t[4]))
+        reset_action()
         return
     if not t[2]:
         current_action.add_columns(stack)
     if t[5] == "where":
         current_action.add_conditions(condition_stack)
 
-
-def p_expression_create(t):
-    '''exp_create : CREATE TABLE COLUMN LFPARENTH exp_attribute RGPARENTH END'''
-    print(t[1])
+def p_expression_create_table(t):
+    '''exp_create_table : CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END'''
     global current_action
     current_action = Create()
     if not current_action.set_table(t[3]):
+        reset_action()
         print("{0} table already exists".format(t[3]))
         return
     # 处理参数
+    current_action.skip=False
+    current_action.is_Index = False
+    current_action.set_primary(t[10])
     current_action.add_stack(stack)
+def p_expression_create_index(t):
+    '''exp_create_index : CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END'''
+    global current_action
+    current_action = Create()
+    if current_action.set_table(t[5]):
+        print("{0} table doesn't exist".format(t[5]))
+        reset_action()
+        return
+    if not current_action.set_index(t[3]):
+        print('{0} index already exists'.format(t[3]))
+        reset_action()
+        return
+    if not current_action.set_attr(t[7]):
+        print("{0} attr doesn't exists".format(t[7]))
+        reset_action()
+        return
+    current_action.is_Index = True
+    # 处理参数
+    
+# def p_expression_key(t):
+#     '''exp_key : PRIMARY KEY LFPARENTH COLUMN RGPARENTH'''
+def p_expression_attributes(t):
+    '''exp_attributes : exp_attribute
+                      | exp_attributes COMMA exp_attribute'''
 def p_expression_attribute(t):
     '''exp_attribute : COLUMN TYPE 
-                     | COLUMN TYPE LFPARENTH COLUMN RGPARENTH
-                     | COLUMN TYPE COMMA exp_attribute
-                     | COLUMN TYPE LFPARENTH COLUMN RGPARENTH COMMA exp_attribute'''
-    if len(t) > 3 and t[3] == '(':
-        stack.append((t[1],t[2],t[4]))
+                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH
+                     | COLUMN TYPE UNIQUE
+                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE'''
+    if len(t)==7:
+        stack.append((t[1],t[2],t[4],1))
+    if len(t)==6:
+        stack.append((t[1],t[2],t[4],0))
+    if len(t)==4:
+        stack.append((t[1],t[2],1))
     else:
-        stack.append((t[1],t[2]))
+        stack.append((t[1],t[2],0))
 
 
 def p_expression_insert(t):
@@ -333,7 +476,8 @@ def set_catalog(catalog_m):
     catalog = catalog_m
 if __name__ == "__main__":
     catalog = catalog_manager()
-    print(catalog.tables.keys())
+    print([item.name for item in catalog.tables['xyz'].attributes])
+    print(catalog.indices.keys())
     while True:
         data = input("sql>")
         yacc.yacc()
