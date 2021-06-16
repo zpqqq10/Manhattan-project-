@@ -1,1 +1,5 @@
 drop table abc;
+drop table aaa;
+drop index indexabc;
+drop index index_xyz;
+drop index aaa;

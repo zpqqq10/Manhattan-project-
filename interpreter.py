@@ -485,10 +485,15 @@ def set_api(api_m):
     api = api_m
 def file_exec(file_name):
     with open(file_name,'r') as f:
+        i=0
         data_list = f.readlines()
+        print("sql execute file start >>>>>>>>>\n")
         for data in data_list:
-            print("sql>"+data)
+            i=i+1
+            data = data.strip('\n')
+            print("sql execute file line {0}>".format(i)+data)
             interpreter(data)
+        print("\nsql execute file end   <<<<<<<<<<")
     
 if __name__ == "__main__":
     catalog = catalog_manager()
