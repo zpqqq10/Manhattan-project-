@@ -3,3 +3,5 @@ drop table aaa;
 drop index indexabc;
 drop index index_xyz;
 drop index aaa;
+create table abc (abc int,primary key(abc));
+create table add (add int,acc int unique,bcc char(10),primary key(add));

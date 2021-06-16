@@ -256,7 +256,7 @@ class Create(object):
             if self.primary not in attr:
                 print("error PRIMARY KEY")
                 return
-            print("create : ", self.values,"table : ",self.table)
+            print("create : ", self.values,"table : ",self.table,"primary : ",self.primary)
 
 class Insert(object):
 
@@ -487,14 +487,13 @@ def file_exec(file_name):
     with open(file_name,'r') as f:
         i=0
         data_list = f.readlines()
-        print("sql execute file start >>>>>>>>>\n")
+        print(">>>>>>>>>>>>>>>>> sql execute file start >>>>>>>>>>>>>>>>>\n")
         for data in data_list:
             i=i+1
             data = data.strip('\n')
             print("sql execute file line {0}>".format(i)+data)
             interpreter(data)
-        print("\nsql execute file end   <<<<<<<<<<")
-    
+        print("\n<<<<<<<<<<<<<<<<< sql execute file end <<<<<<<<<<<<<<<<<")
 if __name__ == "__main__":
     catalog = catalog_manager()
     print([item.name for item in catalog.tables['xyz'].attributes])
