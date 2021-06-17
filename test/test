@@ -31,4 +31,4 @@ delete from abc where see='M';
 delete from abc where sex=123; 
 exit
 
-create table students (sid int,name char(10) unique,sex char(1),phone int, primary key(sid));
+create table students (sid int,name char(10) unique,sex char(1),phone int, gpa float, primary key(sid));

@@ -488,12 +488,12 @@ def p_expression_attribute(t):
                      | COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE'''
     if len(t) == 7:
         stack.append((t[1], t[2], t[4], 1))
-    if len(t) == 6:
+    elif len(t) == 6:
         stack.append((t[1], t[2], t[4], 0))
-    if len(t) == 4:
-        stack.append((t[1], t[2], 1))
+    elif len(t) == 4:
+        stack.append((t[1], t[2], 0, 1))
     else:
-        stack.append((t[1], t[2], 0))
+        stack.append((t[1], t[2], 0, 0))
 
 
 def p_expression_insert(t):
