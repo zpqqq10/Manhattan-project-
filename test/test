@@ -1,7 +1,34 @@
+drop table abc
+remove table abc
 drop table abc;
 drop table aaa;
 drop index indexabc;
 drop index index_xyz;
 drop index aaa;
-create table abc (abc int,primary key(abc));
 create table add (add int,acc int unique,bcc char(10),primary key(add));
+create table abc (abc int,primary key(abc));
+create table abb (add int,acc int unique,bcc char(10));
+create table adc (add int,acc int unique,acc char(10),primary key(add));
+create index testindex on xyz(sid); 
+create index index_xyz on xyz(sid); 
+create index tindex on xyy(sid); 
+create index tindex on xyz(sss); 
+create index tindex on xyz(name); 
+select * from xyz where sid = 0001 and name = 'Zhang'; 
+select name from abc; 
+select * from xyz where sss = 0001; 
+select sss from abc; 
+select * from xyz where name = 0001; 
+select * from abb; 
+insert into xyz values(0010, 'XXX', 'F');
+insert into xyy values(0010, 'XXX', 'F');
+insert into xyz values(0010, 'XXX', 'F', 123);
+insert into xyz values('0010', 'XXX', 'F');
+delete from xyz; 
+delete from abc where sex='M'; 
+delete from abb where sex='M'; 
+delete from abc where see='M'; 
+delete from abc where sex=123; 
+exit
+
+create table students (sid int,name char(10) unique,sex char(1),phone int, primary key(sid));
