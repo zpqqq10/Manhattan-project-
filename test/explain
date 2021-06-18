@@ -1,0 +1,31 @@
+syntax error
+syntax error
+validly drop a table
+drop a non-existent table
+validly drop an index
+validly drop an index
+drop a non-existent index
+validly crate a table
+create a table with a duplicate name
+create a table without appointing a primary key
+create a table with duplicate attributes names
+validly create an index
+create an index with a duplicate name
+create an index on a non-existent table
+create an index on a non-existent attribute
+create an index on a non-unique attribute
+validly select
+validly select
+select on a non-existent attribute
+select a non-existent attribute
+illegal condition
+select on a non-existent table
+validly insert a record
+insert into a non-existent table
+the number of values is wrong
+illegal values
+validly delete
+validly delete
+delete from a non-existent table
+delete by a non-existent attribute
+illegal condition 

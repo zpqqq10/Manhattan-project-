@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND CHAR COLUMN COMMA CREATE DELETE DROP END EXECFILE EXIT FROM INDEX INSERT INTO KEY LFPARENTH ON OP PRIMARY RGPARENTH SELECT STAR TABLE TYPE UNIQUE VALUES WHEREexpressions : expression\n                    | expressions expression\n                    | exp_exitexpression :  exp_select\n                    | exp_create_table\n                    | exp_create_index\n                    | exp_insert\n                    | exp_drop_table\n                    | exp_drop_index\n                    | exp_delete\n                    | exp_execfile exp_exit : EXITexp_drop_table : DROP TABLE COLUMN ENDexp_drop_index : DROP INDEX COLUMN ENDexp_delete : DELETE  FROM COLUMN END\n                    | DELETE  FROM COLUMN WHERE exp_condition ENDexp_select : SELECT columns FROM COLUMN END\n                    | SELECT STAR FROM COLUMN END\n                    | SELECT STAR FROM COLUMN WHERE exp_condition END\n                    | SELECT columns FROM COLUMN WHERE exp_condition ENDexp_create_table : CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH ENDexp_create_index : CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH ENDexp_attributes : exp_attribute\n                      | exp_attributes COMMA exp_attributeexp_attribute : COLUMN TYPE \n                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH\n                     | COLUMN TYPE UNIQUE\n                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUEexp_insert : INSERT INTO COLUMN exp_insert_endexp_condition : COLUMN OP COLUMN\n                     | COLUMN OP COLUMN AND exp_conditionexp_insert_end : VALUES LFPARENTH columns RGPARENTH END\n                      | LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH ENDcolumns : COLUMN\n               | COLUMN COMMA columnsexp_execfile : EXECFILE COLUMN END'
+_lr_signature = 'AND CHAR COLUMN COMMA CREATE DELETE DROP END EXECFILE EXIT FROM HELP INDEX INSERT INTO KEY LFPARENTH ON OP PRIMARY RGPARENTH SELECT STAR TABLE TYPE UNIQUE VALUES WHEREexpressions : expression\n                    | expressions expression\n                    | exp_exitexpression :  exp_select\n                    | exp_create_table\n                    | exp_create_index\n                    | exp_insert\n                    | exp_drop_table\n                    | exp_drop_index\n                    | exp_delete\n                    | exp_execfile\n                    | exp_help exp_exit : EXITexp_drop_table : DROP TABLE COLUMN ENDexp_drop_index : DROP INDEX COLUMN ENDexp_delete : DELETE  FROM COLUMN END\n                    | DELETE  FROM COLUMN WHERE exp_condition ENDexp_select : SELECT columns FROM COLUMN END\n                    | SELECT STAR FROM COLUMN END\n                    | SELECT STAR FROM COLUMN WHERE exp_condition END\n                    | SELECT columns FROM COLUMN WHERE exp_condition ENDexp_create_table : CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH ENDexp_create_index : CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH ENDexp_attributes : exp_attribute\n                      | exp_attributes COMMA exp_attributeexp_attribute : COLUMN TYPE \n                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH\n                     | COLUMN TYPE UNIQUE\n                     | COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUEexp_insert : INSERT INTO COLUMN exp_insert_endexp_condition : COLUMN OP COLUMN\n                     | COLUMN OP COLUMN AND exp_conditionexp_insert_end : VALUES LFPARENTH columns RGPARENTH END\n                      | LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH ENDcolumns : COLUMN\n               | COLUMN COMMA columnsexp_execfile : EXECFILE COLUMN END exp_help : HELP END'
     
-_lr_action_items = {'EXIT':([0,],[12,]),'SELECT':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[13,13,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'CREATE':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[14,14,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'INSERT':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[15,15,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'DROP':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[16,16,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'DELETE':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[17,17,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'EXECFILE':([0,1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[18,18,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'$end':([1,2,3,4,5,6,7,8,9,10,11,12,19,39,45,48,49,50,52,54,73,74,75,87,92,99,101,],[0,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-2,-36,-29,-13,-14,-15,-17,-18,-16,-20,-19,-32,-22,-33,-21,]),'STAR':([13,],[22,]),'COLUMN':([13,18,23,24,25,26,27,28,30,31,32,43,44,47,51,53,55,60,68,69,72,77,88,89,91,],[21,29,33,34,35,36,37,38,40,21,42,56,59,21,62,62,62,21,56,80,83,84,21,62,96,]),'TABLE':([14,16,],[23,26,]),'INDEX':([14,16,],[24,27,]),'INTO':([15,],[25,]),'FROM':([17,20,21,22,41,],[28,30,-34,32,-35,]),'RGPARENTH':([21,41,61,70,80,84,93,96,98,],[-34,-35,71,81,86,90,97,98,100,]),'COMMA':([21,57,58,66,76,79,90,95,],[31,68,-23,-25,-27,-24,-26,-28,]),'END':([29,36,37,38,40,42,63,64,65,81,83,86,94,97,100,],[39,48,49,50,52,54,73,74,75,87,-30,92,-31,99,101,]),'LFPARENTH':([33,35,46,59,67,82,85,],[43,47,60,69,77,88,91,]),'ON':([34,],[44,]),'VALUES':([35,71,],[46,82,]),'WHERE':([38,40,42,],[51,53,55,]),'TYPE':([56,],[66,]),'CHAR':([56,],[67,]),'OP':([62,],[72,]),'UNIQUE':([66,90,],[76,95,]),'PRIMARY':([68,],[78,]),'KEY':([78,],[85,]),'AND':([83,],[89,]),}
+_lr_action_items = {'EXIT':([0,],[13,]),'SELECT':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[14,14,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'CREATE':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[15,15,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'INSERT':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[16,16,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'DROP':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[17,17,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'DELETE':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[18,18,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'EXECFILE':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[19,19,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'HELP':([0,1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[20,20,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'$end':([1,2,3,4,5,6,7,8,9,10,11,12,13,21,32,42,48,51,52,53,55,57,76,77,78,90,95,102,104,],[0,-1,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-2,-38,-37,-30,-14,-15,-16,-18,-19,-17,-21,-20,-33,-23,-34,-22,]),'STAR':([14,],[24,]),'COLUMN':([14,19,25,26,27,28,29,30,33,34,35,46,47,50,54,56,58,63,71,72,75,80,91,92,94,],[23,31,36,37,38,39,40,41,43,23,45,59,62,23,65,65,65,23,59,83,86,87,23,65,99,]),'TABLE':([15,17,],[25,28,]),'INDEX':([15,17,],[26,29,]),'INTO':([16,],[27,]),'FROM':([18,22,23,24,44,],[30,33,-35,35,-36,]),'END':([20,31,39,40,41,43,45,66,67,68,84,86,89,97,100,103,],[32,42,51,52,53,55,57,76,77,78,90,-31,95,-32,102,104,]),'RGPARENTH':([23,44,64,73,83,87,96,99,101,],[-35,-36,74,84,89,93,100,101,103,]),'COMMA':([23,60,61,69,79,82,93,98,],[34,71,-24,-26,-28,-25,-27,-29,]),'LFPARENTH':([36,38,49,62,70,85,88,],[46,50,63,72,80,91,94,]),'ON':([37,],[47,]),'VALUES':([38,74,],[49,85,]),'WHERE':([41,43,45,],[54,56,58,]),'TYPE':([59,],[69,]),'CHAR':([59,],[70,]),'OP':([65,],[75,]),'UNIQUE':([69,93,],[79,98,]),'PRIMARY':([71,],[81,]),'KEY':([81,],[88,]),'AND':([86,],[92,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expressions':([0,],[1,]),'expression':([0,1,],[2,19,]),'exp_exit':([0,],[3,]),'exp_select':([0,1,],[4,4,]),'exp_create_table':([0,1,],[5,5,]),'exp_create_index':([0,1,],[6,6,]),'exp_insert':([0,1,],[7,7,]),'exp_drop_table':([0,1,],[8,8,]),'exp_drop_index':([0,1,],[9,9,]),'exp_delete':([0,1,],[10,10,]),'exp_execfile':([0,1,],[11,11,]),'columns':([13,31,47,60,88,],[20,41,61,70,93,]),'exp_insert_end':([35,],[45,]),'exp_attributes':([43,],[57,]),'exp_attribute':([43,68,],[58,79,]),'exp_condition':([51,53,55,89,],[63,64,65,94,]),}
+_lr_goto_items = {'expressions':([0,],[1,]),'expression':([0,1,],[2,21,]),'exp_exit':([0,],[3,]),'exp_select':([0,1,],[4,4,]),'exp_create_table':([0,1,],[5,5,]),'exp_create_index':([0,1,],[6,6,]),'exp_insert':([0,1,],[7,7,]),'exp_drop_table':([0,1,],[8,8,]),'exp_drop_index':([0,1,],[9,9,]),'exp_delete':([0,1,],[10,10,]),'exp_execfile':([0,1,],[11,11,]),'exp_help':([0,1,],[12,12,]),'columns':([14,34,50,63,91,],[22,44,64,73,96,]),'exp_insert_end':([38,],[48,]),'exp_attributes':([46,],[60,]),'exp_attribute':([46,71,],[61,82,]),'exp_condition':([54,56,58,92,],[66,67,68,97,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,40 +27,42 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expressions","S'",1,None,None,None),
-  ('expressions -> expression','expressions',1,'p_statement_expr','interpreter.py',320),
-  ('expressions -> expressions expression','expressions',2,'p_statement_expr','interpreter.py',321),
-  ('expressions -> exp_exit','expressions',1,'p_statement_expr','interpreter.py',322),
-  ('expression -> exp_select','expression',1,'p_expression_start','interpreter.py',329),
-  ('expression -> exp_create_table','expression',1,'p_expression_start','interpreter.py',330),
-  ('expression -> exp_create_index','expression',1,'p_expression_start','interpreter.py',331),
-  ('expression -> exp_insert','expression',1,'p_expression_start','interpreter.py',332),
-  ('expression -> exp_drop_table','expression',1,'p_expression_start','interpreter.py',333),
-  ('expression -> exp_drop_index','expression',1,'p_expression_start','interpreter.py',334),
-  ('expression -> exp_delete','expression',1,'p_expression_start','interpreter.py',335),
-  ('expression -> exp_execfile','expression',1,'p_expression_start','interpreter.py',336),
-  ('exp_exit -> EXIT','exp_exit',1,'p_expression_exit','interpreter.py',338),
-  ('exp_drop_table -> DROP TABLE COLUMN END','exp_drop_table',4,'p_expression_drop_table','interpreter.py',343),
-  ('exp_drop_index -> DROP INDEX COLUMN END','exp_drop_index',4,'p_expression_drop_index','interpreter.py',351),
-  ('exp_delete -> DELETE FROM COLUMN END','exp_delete',4,'p_expression_delete','interpreter.py',359),
-  ('exp_delete -> DELETE FROM COLUMN WHERE exp_condition END','exp_delete',6,'p_expression_delete','interpreter.py',360),
-  ('exp_select -> SELECT columns FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',371),
-  ('exp_select -> SELECT STAR FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',372),
-  ('exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',373),
-  ('exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',374),
-  ('exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END','exp_create_table',13,'p_expression_create_table','interpreter.py',387),
-  ('exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END','exp_create_index',9,'p_expression_create_index','interpreter.py',400),
-  ('exp_attributes -> exp_attribute','exp_attributes',1,'p_expression_attributes','interpreter.py',421),
-  ('exp_attributes -> exp_attributes COMMA exp_attribute','exp_attributes',3,'p_expression_attributes','interpreter.py',422),
-  ('exp_attribute -> COLUMN TYPE','exp_attribute',2,'p_expression_attribute','interpreter.py',424),
-  ('exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH','exp_attribute',5,'p_expression_attribute','interpreter.py',425),
-  ('exp_attribute -> COLUMN TYPE UNIQUE','exp_attribute',3,'p_expression_attribute','interpreter.py',426),
-  ('exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE','exp_attribute',6,'p_expression_attribute','interpreter.py',427),
-  ('exp_insert -> INSERT INTO COLUMN exp_insert_end','exp_insert',4,'p_expression_insert','interpreter.py',439),
-  ('exp_condition -> COLUMN OP COLUMN','exp_condition',3,'p_expression_condition','interpreter.py',452),
-  ('exp_condition -> COLUMN OP COLUMN AND exp_condition','exp_condition',5,'p_expression_condition','interpreter.py',453),
-  ('exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',5,'p_expresssion_insert_end','interpreter.py',459),
-  ('exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',8,'p_expresssion_insert_end','interpreter.py',460),
-  ('columns -> COLUMN','columns',1,'p_expression_columns','interpreter.py',466),
-  ('columns -> COLUMN COMMA columns','columns',3,'p_expression_columns','interpreter.py',467),
-  ('exp_execfile -> EXECFILE COLUMN END','exp_execfile',3,'p_expression_execfile','interpreter.py',471),
+  ('expressions -> expression','expressions',1,'p_statement_expr','interpreter.py',368),
+  ('expressions -> expressions expression','expressions',2,'p_statement_expr','interpreter.py',369),
+  ('expressions -> exp_exit','expressions',1,'p_statement_expr','interpreter.py',370),
+  ('expression -> exp_select','expression',1,'p_expression_start','interpreter.py',377),
+  ('expression -> exp_create_table','expression',1,'p_expression_start','interpreter.py',378),
+  ('expression -> exp_create_index','expression',1,'p_expression_start','interpreter.py',379),
+  ('expression -> exp_insert','expression',1,'p_expression_start','interpreter.py',380),
+  ('expression -> exp_drop_table','expression',1,'p_expression_start','interpreter.py',381),
+  ('expression -> exp_drop_index','expression',1,'p_expression_start','interpreter.py',382),
+  ('expression -> exp_delete','expression',1,'p_expression_start','interpreter.py',383),
+  ('expression -> exp_execfile','expression',1,'p_expression_start','interpreter.py',384),
+  ('expression -> exp_help','expression',1,'p_expression_start','interpreter.py',385),
+  ('exp_exit -> EXIT','exp_exit',1,'p_expression_exit','interpreter.py',389),
+  ('exp_drop_table -> DROP TABLE COLUMN END','exp_drop_table',4,'p_expression_drop_table','interpreter.py',396),
+  ('exp_drop_index -> DROP INDEX COLUMN END','exp_drop_index',4,'p_expression_drop_index','interpreter.py',406),
+  ('exp_delete -> DELETE FROM COLUMN END','exp_delete',4,'p_expression_delete','interpreter.py',416),
+  ('exp_delete -> DELETE FROM COLUMN WHERE exp_condition END','exp_delete',6,'p_expression_delete','interpreter.py',417),
+  ('exp_select -> SELECT columns FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',429),
+  ('exp_select -> SELECT STAR FROM COLUMN END','exp_select',5,'p_expression_select','interpreter.py',430),
+  ('exp_select -> SELECT STAR FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',431),
+  ('exp_select -> SELECT columns FROM COLUMN WHERE exp_condition END','exp_select',7,'p_expression_select','interpreter.py',432),
+  ('exp_create_table -> CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END','exp_create_table',13,'p_expression_create_table','interpreter.py',446),
+  ('exp_create_index -> CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END','exp_create_index',9,'p_expression_create_index','interpreter.py',461),
+  ('exp_attributes -> exp_attribute','exp_attributes',1,'p_expression_attributes','interpreter.py',484),
+  ('exp_attributes -> exp_attributes COMMA exp_attribute','exp_attributes',3,'p_expression_attributes','interpreter.py',485),
+  ('exp_attribute -> COLUMN TYPE','exp_attribute',2,'p_expression_attribute','interpreter.py',489),
+  ('exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH','exp_attribute',5,'p_expression_attribute','interpreter.py',490),
+  ('exp_attribute -> COLUMN TYPE UNIQUE','exp_attribute',3,'p_expression_attribute','interpreter.py',491),
+  ('exp_attribute -> COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE','exp_attribute',6,'p_expression_attribute','interpreter.py',492),
+  ('exp_insert -> INSERT INTO COLUMN exp_insert_end','exp_insert',4,'p_expression_insert','interpreter.py',505),
+  ('exp_condition -> COLUMN OP COLUMN','exp_condition',3,'p_expression_condition','interpreter.py',517),
+  ('exp_condition -> COLUMN OP COLUMN AND exp_condition','exp_condition',5,'p_expression_condition','interpreter.py',518),
+  ('exp_insert_end -> VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',5,'p_expresssion_insert_end','interpreter.py',524),
+  ('exp_insert_end -> LFPARENTH columns RGPARENTH VALUES LFPARENTH columns RGPARENTH END','exp_insert_end',8,'p_expresssion_insert_end','interpreter.py',525),
+  ('columns -> COLUMN','columns',1,'p_expression_columns','interpreter.py',531),
+  ('columns -> COLUMN COMMA columns','columns',3,'p_expression_columns','interpreter.py',532),
+  ('exp_execfile -> EXECFILE COLUMN END','exp_execfile',3,'p_expression_execfile','interpreter.py',537),
+  ('exp_help -> HELP END','exp_help',2,'p_expression_help','interpreter.py',541),
 ]

@@ -1,9 +1,13 @@
 from sys import version
 import ply.lex as lex
 import ply.yacc as yacc
-from catalog import catalog_manager,Table
+from catalog import catalog_manager, Table
 import collections
+# global variables for each manager
 catalog = None
+record = None
+index = None
+
 tokens = (
     'LFPARENTH',
     'RGPARENTH',
@@ -34,7 +38,8 @@ tokens = (
     "DELETE",
     "INDEX",
     "ON",
-    "EXECFILE"
+    "EXECFILE",
+    "HELP"
 )
 
 
@@ -67,6 +72,8 @@ t_DELETE = r'DELETE|delete'
 t_INDEX = r'index|INDEX'
 t_ON = r'ON|on'
 t_EXECFILE = r'EXECFILE|execfile'
+t_HELP = r'HELP|help'
+
 def t_COLUMN(t):
     r'[a-zA-Z0-9/_.-]+'
     if t.value in ['FROM', 'from']:
@@ -91,28 +98,30 @@ def t_COLUMN(t):
         t.type = 'SELECT'
     if t.value in ['AND', 'and']:
         t.type = 'AND'
-    if t.value in ['INT','int','FLOAT','float']:
+    if t.value in ['INT', 'int', 'FLOAT', 'float']:
         t.type = 'TYPE'
-    if t.value in ['char','CHAR']:
+    if t.value in ['char', 'CHAR']:
         t.type = 'CHAR'
-    if t.value in ['QUIT','quit','EXIT','exit']:
+    if t.value in ['QUIT', 'quit', 'EXIT', 'exit']:
         t.type = 'EXIT'
-    if t.value in ['PRIMARY','primary']:
+    if t.value in ['PRIMARY', 'primary']:
         t.type = 'PRIMARY'
-    if t.value in ['KEY','key']:
+    if t.value in ['KEY', 'key']:
         t.type = 'KEY'
-    if t.value in ['UNIQUE','unique']:
+    if t.value in ['UNIQUE', 'unique']:
         t.type = 'UNIQUE'
-    if t.value in ['DROP','drop']:
+    if t.value in ['DROP', 'drop']:
         t.type = 'DROP'
-    if t.value in ['DELETE','delete']:
+    if t.value in ['DELETE', 'delete']:
         t.type = 'DELETE'
-    if t.value in ['ON','on']:
+    if t.value in ['ON', 'on']:
         t.type = 'ON'
-    if t.value in ['index','INDEX']:
+    if t.value in ['index', 'INDEX']:
         t.type = 'INDEX'
-    if t.value in ['EXECFILE','execfile']:
+    if t.value in ['EXECFILE', 'execfile']:
         t.type = 'EXECFILE'
+    if t.value in ['HELP','help']:
+        t.type = 'HELP'
     return t
 
 
@@ -175,7 +184,7 @@ condition_dict = {}
 
 
 def reset_action():
-    global current_action, stack, columns_dict, condition_dict,condition_stack
+    global current_action, stack, columns_dict, condition_dict, condition_stack
     current_action = None
     stack.reset()
     condition_stack.reset()
@@ -196,13 +205,15 @@ class Select(object):
 
     def add_columns(self, stack):
         [self.columns.append(v) for v in stack if v not in self.columns]
-    def add_conditions(self,condition_stack):
-        [self.conditions.append(v) for v in condition_stack if v not in self.conditions]
-        
+
+    def add_conditions(self, condition_stack):
+        [self.conditions.append(v)
+         for v in condition_stack if v not in self.conditions]
 
     def action(self):
         """展示数据"""
-        print("self.values",self.columns,self.conditions)
+        print("self.values", self.columns, self.conditions)
+
 
 class Delete(object):
 
@@ -215,12 +226,15 @@ class Delete(object):
         self.table = table
         return table in catalog.tables.keys()
 
-    def add_conditions(self,condition_stack):
-        [self.conditions.append(v) for v in condition_stack if v not in self.conditions]
+    def add_conditions(self, condition_stack):
+        [self.conditions.append(v)
+         for v in condition_stack if v not in self.conditions]
+
     def action(self):
         """展示数据"""
 
-        print("self.table",self.table,"self,condition",self.conditions)
+        print("self.table", self.table, "self,condition", self.conditions)
+
 
 class Create(object):
     def __init__(self):
@@ -230,33 +244,44 @@ class Create(object):
         self.attr = None
         self.is_Index = False
         self.skip = False
+
     def set_table(self, table):
         self.table = table
         return table not in catalog.tables.keys()
         # return table not in datas
-    def set_index(self,index):
+
+    def set_index(self, index):
         self.index = index
         return index not in catalog.indices.keys()
-    def set_attr(self,attr):
+
+    def set_attr(self, attr):
         self.attr = attr
         return attr in [item.name for item in catalog.tables[self.table].attributes]
+
     def add_stack(self, stack):
         [self.add_values(v) for v in stack if v not in self.values]
 
     def add_values(self, value):
         self.values.append(value)
-    def set_primary(self,value):
+
+    def set_primary(self, value):
         self.primary = value
-    def action(self): 
-        # the last value of the attribute tuple is whether the attribute is unique 
+
+    def action(self):
+        # the last value of the attribute tuple is whether the attribute is unique
         if self.is_Index:
-            print("Create Index: table",self.table,"index",self.index,"attribute",self.attr)
+            # create an index
+            print("Create Index: table", self.table, "index",
+                  self.index, "attribute", self.attr)
         else:
+            # create a table
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
                 print("error PRIMARY KEY")
                 return
-            print("create : ", self.values,"table : ",self.table,"primary : ",self.primary)
+            print("create : ", self.values, "table : ",
+                  self.table, "primary : ", self.primary)
+
 
 class Insert(object):
 
@@ -266,6 +291,7 @@ class Insert(object):
         self.table = None
         self._stack = None
         self.skip = False
+
     def set_table(self, table):
         self.table = table
         return table not in catalog.tables.keys()
@@ -281,9 +307,10 @@ class Insert(object):
                 if index != len(catalog.tables[self.table].attributes):
                     print("error default columns")
                     return
-                attrs  = self._stack[:index]
+                attrs = self._stack[:index]
                 values = self._stack[index:]
-                print("Insert with columns: attributes:",attrs,"values:",values)
+                print("Insert with columns: attributes:",
+                      attrs, "values:", values)
 
             else:
                 print(" error columns and values not equal")
@@ -294,26 +321,48 @@ class Insert(object):
                       format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 return
             self._stack._stack.reverse()
-            print("Insert without columns: values:",self._stack)
+            print("Insert without columns: values:", self._stack)
+
+
 class Drop(object):
     def __init__(self):
         self.table = None
         self.index = None
+
     def set_table(self, table):
         self.table = table
         return table in catalog.tables.keys()
-    def set_index(self,index):
+
+    def set_index(self, index):
         self.index = index
         return index in catalog.indices.keys()
+
     def action(self):
         global catalog
         if self.table and self.table in catalog.tables.keys():
-            print("Drop table:",self.table)
+            print("Drop table:", self.table)
         if self.index and self.index in catalog.indices.keys():
-            print("Drop index:",self.index)
+            print("Drop index:", self.index)
 
 
+class Help(object):
+    def __init__(self):
+        pass
 
+    def action(self): 
+        print('----------------Minisql------------------')
+        print('-----Developed by Xu, Bao and Cheung-----')
+        print('Support: ')
+        print('- create a table')
+        print('- create an index')
+        print('- drop a table')
+        print('- drop an index')
+        print('- insert records into a table')
+        print('- delete records from a table')
+        print('- select from a table')
+        print('- execute instructions in a file')
+        print('- enter "exit" to exit Minisql')
+        
 
 def p_statement_expr(t):
     '''expressions : expression
@@ -332,12 +381,17 @@ def p_expression_start(t):
                     | exp_drop_table
                     | exp_drop_index
                     | exp_delete
-                    | exp_execfile'''
+                    | exp_execfile
+                    | exp_help'''
+
+
 def p_expression_exit(t):
     ''' exp_exit : EXIT'''
     print("Goodbye")
-    # a close method in api,commit the buffer and so on 
+    # a close method in api,commit the buffer and so on
     exit(1)
+
+
 def p_expression_drop_table(t):
     '''exp_drop_table : DROP TABLE COLUMN END'''
     global current_action
@@ -346,6 +400,8 @@ def p_expression_drop_table(t):
         print("{0} table not exists".format(t[3]))
         reset_action()
         return
+
+
 def p_expression_drop_index(t):
     '''exp_drop_index : DROP INDEX COLUMN END'''
     global current_action
@@ -354,6 +410,8 @@ def p_expression_drop_index(t):
         print("{0} index not exists".format(t[3]))
         reset_action()
         return
+
+
 def p_expression_delete(t):
     '''exp_delete : DELETE  FROM COLUMN END
                     | DELETE  FROM COLUMN WHERE exp_condition END'''
@@ -365,6 +423,7 @@ def p_expression_delete(t):
         return
     if t[4] == "where":
         current_action.add_conditions(condition_stack)
+
 
 def p_expression_select(t):
     '''exp_select : SELECT columns FROM COLUMN END
@@ -382,6 +441,7 @@ def p_expression_select(t):
     if t[5] == "where":
         current_action.add_conditions(condition_stack)
 
+
 def p_expression_create_table(t):
     '''exp_create_table : CREATE TABLE COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END'''
     global current_action
@@ -391,10 +451,12 @@ def p_expression_create_table(t):
         print("{0} table already exists".format(t[3]))
         return
     # 处理参数
-    current_action.skip=False
+    current_action.skip = False
     current_action.is_Index = False
     current_action.set_primary(t[10])
     current_action.add_stack(stack)
+
+
 def p_expression_create_index(t):
     '''exp_create_index : CREATE INDEX COLUMN ON COLUMN LFPARENTH COLUMN RGPARENTH END'''
     global current_action
@@ -413,25 +475,30 @@ def p_expression_create_index(t):
         return
     current_action.is_Index = True
     # 处理参数
-    
+
 # def p_expression_key(t):
 #     '''exp_key : PRIMARY KEY LFPARENTH COLUMN RGPARENTH'''
+
+
 def p_expression_attributes(t):
     '''exp_attributes : exp_attribute
                       | exp_attributes COMMA exp_attribute'''
+
+
 def p_expression_attribute(t):
     '''exp_attribute : COLUMN TYPE 
                      | COLUMN CHAR LFPARENTH COLUMN RGPARENTH
                      | COLUMN TYPE UNIQUE
                      | COLUMN CHAR LFPARENTH COLUMN RGPARENTH UNIQUE'''
-    if len(t)==7:
-        stack.append((t[1],t[2],t[4],1))
-    elif len(t)==6:
-        stack.append((t[1],t[2],t[4],0))
-    elif len(t)==4:
-        stack.append((t[1],t[2],1))
+
+    if len(t) == 7:
+        stack.append((t[1], t[2], t[4], 1))
+    elif len(t) == 6:
+        stack.append((t[1], t[2], t[4], 0))
+    elif len(t) == 4:
+        stack.append((t[1], t[2], 0, 1))
     else:
-        stack.append((t[1],t[2],0))
+        stack.append((t[1], t[2], 0, 0))
 
 
 def p_expression_insert(t):
@@ -446,12 +513,11 @@ def p_expression_insert(t):
     current_action.add_stack(stack)
 
 
-
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
                      | COLUMN OP COLUMN AND exp_condition'''
-    print("condition",t[1],t[2],t[3])
-    condition_stack.append((t[1],t[2],t[3]))
+    print("condition", t[1], t[2], t[3])
+    condition_stack.append((t[1], t[2], t[3]))
 
 
 def p_expresssion_insert_end(t):
@@ -466,34 +532,50 @@ def p_expression_columns(t):
                | COLUMN COMMA columns'''
     stack.append(t[1])
 
+
 def p_expression_execfile(t):
     '''exp_execfile : EXECFILE COLUMN END'''
     file_exec(t[2])
+
+def p_expression_help(t):
+    ''' exp_help : HELP END'''
+    global current_action
+    current_action = Help()
 def p_error(p):
     if p:
         print("Syntax error at {0}".format(p.value))
     else:
         print("Syntax error at EOF")
+
+
 def interpreter(data):
     yacc.yacc()
     yacc.parse(data)
+
+
 def set_catalog(catalog_m):
     global catalog
     catalog = catalog_m
+
+
 def set_api(api_m):
     global api
     api = api_m
+
+
 def file_exec(file_name):
-    with open(file_name,'r') as f:
-        i=0
+    with open(file_name, 'r') as f:
+        i = 0
         data_list = f.readlines()
         print(">>>>>>>>>>>>>>>>> sql execute file start >>>>>>>>>>>>>>>>>\n")
         for data in data_list:
-            i=i+1
+            i = i+1
             data = data.strip('\n')
             print("sql execute file line {0}>".format(i)+data)
             interpreter(data)
         print("\n<<<<<<<<<<<<<<<<< sql execute file end <<<<<<<<<<<<<<<<<")
+
+
 if __name__ == "__main__":
     catalog = catalog_manager()
     print([item.name for item in catalog.tables['xyz'].attributes])
