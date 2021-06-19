@@ -41,9 +41,9 @@ class catalog_manager:
                 uniqueness, = struct.unpack('=?', file.read(1))
                 type, = struct.unpack('=B', file.read(1))
                 if type == 1: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, 'i', 0, uniqueness))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'i', 4, uniqueness))
                 elif type == 2: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, 'f', 0, uniqueness))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'f', 4, uniqueness))
                 elif type == 3:
                     length, = struct.unpack('=i', file.read(4))
                     self.tables[table_name].attributes.append(Attribute(attr_name, str(length)+'s', length, uniqueness))

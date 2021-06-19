@@ -1,5 +1,5 @@
 import time
-
+import struct
 
 class optimizer(object):
     def __init__(self):
@@ -115,14 +115,53 @@ class API():
         end = time.time()
         print('Duration: %fs' % (end - start))
 
-    def insert_record(self):
+    def insert_record(self, table, attr, value):
         start = time.time()
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
+        if (len(attr) != len(value)):
+            print("Error: The number of input values DOES NOT MATCH the number of input attributes")
+            return False
         '''transform the input to the correct format'''
+        # I think there is nothing need transforming
         '''call self.index.search() to check uniqueness'''
+        primary = self.catalog.tables[table].primary_key
+        for i, item in attr:
+            if (item == primary):
+                primary_index = i
+                break
+        primary_value = value[primary_index]
+        for item in self.catalog.tables[table].attributes:
+            if self.catalog.tables[table].attributes[item].name == primary:
+                primary_type = self.catalog.tables[table].attributes[item].type
+        if primary_type[0] == 'i' or primary_type[0] == 'f':
+            primary_length = 4
+        else:
+            primary_length = int(primary_type[:-1])
+        uniqRes = self.index.search(table, primary_value, primary_type, primary_length)
+        if (uniqRes) : # Not unique
+            print("ERROR: the input data has duplicated Primary Key Value")
+            return False
+
+        # string process
+        for i, item in self.catalog.tables[table].attributes:
+            if (item[-1] == 's'):
+                if (value[i][0] == '"' and value[i][-1] == '"') or (value[i][0] == ''' and value[i][-1] == '''):
+                    value[i] = value[1:-1]
+                else:
+                    print("ERROR: The quote signal of string value is wrong")
+                    return False
         '''call self.record.insert()'''
+        self.record.insert(table, attr, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
+        (result_value, result_ptr) = self.record.scan_all(table, (), attr)
+        order = (4096-2-1-2) // (primary_length + 2) + 1
+        for item in self.catalog.indices:
+            if self.catalog.indices[item][0] == table:
+                index_name = item
+                break
+        self.index.create_index(index_name, result_ptr, result_value, order)
+        self.index.save_Bplus(index_name, primary_type, primary_length)
         end = time.time()
         print('Duration: %fs' % (end - start))
 
@@ -133,11 +172,67 @@ class API():
         end = time.time()
         print('Duration: %fs' % (end - start))
 
-    def select(self):
+    def select(self, table, cols, conditions):
         start = time.time()
-        # decode
+        # checke index
+        # for item in self.catalog.indices:
+        #     if (self.catalog.indices[item][0] == table):
+        #         flag = True
+        #         index = item
+        #         break;
+        #     else:
+        #         flag = False
         # if an index can be made use of, use the index
-        # if not, scan all the records
+        # if flag:
+        #     result_record, result_ptr = self.record.scan_with_index(table, conditions, cols, domain)
+
+        # if not, scan all the record
+        
+        # decode if need
+        if len(cols) == 0:
+            cols = []
+            for item in self.catalog.tables[table].attributes:
+                if item.length == 0:
+                    cols.append((item.name, item.type, 4, item.uniqueness))
+                else: 
+                    cols.append((item.name, item.type, item.length, item.uniqueness))
+                # print(item.length)
+        (result_record, result_ptr) = self.record.scan_all(table, conditions, cols)
+        stringFlag = [0 for i in range(len(cols) - 1)]
+        for item in cols:
+            for col in self.catalog.tables[table].attributes:
+                if col.name == item[0]:
+                    type = col.type
+                    break
+            if type[-1] == 's':
+                stringFlag[cols.index(item)] = int(type[:-1])
+        namelength = 0
+        for i in cols:
+            namelength = namelength + len(i[0])
+            if len(str(i[0])) > 14:
+                output = str(i[0])[0:14]
+            else:
+                output = str(i[0])
+            print('|',output.center(15),end='')
+        print('|\n')
+        print('-' * (17 * len(cols) + 1))
+        for i in result_record:
+            for j in range(len(cols) - 1):
+                if stringFlag[j] != 0:
+                    string = i[j].decode("utf-8")
+                    if len(str(string)) > 14:
+                        output = str(string)[0:14]
+                    else:
+                        output = str(string)
+                else:
+                    if len(str(i[j])) > 14:
+                        output = str(i[j])[0:14]
+                    else:
+                        output = str(i[j])
+                print('|',output.center(15) ,end='')
+            print('|\n')
+            print('-' * (17 * len(cols) + 1))
+        print("Returned %d entrys," % len(result_record),end='')    
         end = time.time()
         print('Duration: %fs' % (end - start))
 
@@ -172,23 +267,4 @@ class API():
         self.catalog.save()
 
 
-'''How to print: '''
-    # print('-' * (17 * len(__columns_list_num) + 1))
-    # for i in __columns_list:
-    #     if len(str(i)) > 14:
-    #         output = str(i)[0:14]
-    #     else:
-    #         output = str(i)
-    #     print('|',output.center(15),end='')
-    # print('|')
-    # print('-' * (17 * len(__columns_list_num) + 1))
-    # for i in results:
-    #     for j in __columns_list_num:
-    #         if len(str(i[j])) > 14:
-    #             output = str(i[j])[0:14]
-    #         else:
-    #             output = str(i[j])
-    #         print('|',output.center(15) ,end='')
-    #     print('|')
-    # print('-' * (17 * len(__columns_list_num) + 1))
-    # print("Returned %d entrys," % len(results),end='')
+

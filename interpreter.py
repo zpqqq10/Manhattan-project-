@@ -75,7 +75,8 @@ t_EXECFILE = r'EXECFILE|execfile'
 t_HELP = r'HELP|help'
 
 def t_COLUMN(t):
-    r'[a-zA-Z0-9/_.-]+'
+    # r'[a-zA-Z0-9/_.-]+'
+    r''' "[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'|[a-zA-Z0-9/_.-]+ '''
     if t.value in ['FROM', 'from']:
         t.type = 'FROM'
     if t.value in ['CREATE', 'create']:
@@ -212,6 +213,7 @@ class Select(object):
 
     def action(self):
         """展示数据"""
+        api.select(self.table, self.columns, self.conditions)
         print("self.values", self.columns, self.conditions)
 
 
@@ -314,7 +316,7 @@ class Insert(object):
                 values = self._stack[index:]
                 print("Insert with columns: attributes:",
                       attrs, "values:", values)
-
+                api.insert_record(self.table, attrs, values)
             else:
                 print(" error columns and values not equal")
                 return
@@ -502,9 +504,9 @@ def p_expression_attribute(t):
     elif len(t) == 6:
         stack.append((t[1], t[2], t[4], 0))
     elif len(t) == 4:
-        stack.append((t[1], t[2], 0, 1))
+        stack.append((t[1], t[2], 4, 1))
     else:
-        stack.append((t[1], t[2], 0, 0))
+        stack.append((t[1], t[2], 4, 0))
 
 
 def p_expression_insert(t):

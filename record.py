@@ -139,6 +139,7 @@ class record_manager:
             if bid==0:
                 valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack("=?hh?h", block_content[:8])
                 idx += 8
+                record_length_a = 28
             while idx + record_length_a * 8 <= block_len:
                 record = struct.unpack(format,block_content[idx:idx+record_length_r])
                 if record[0] & self.check_record(record,attr,constraint):
