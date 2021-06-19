@@ -50,8 +50,9 @@ class API():
                 attr[3] = False
         # duplicate is checked in this call
         self.catalog.create_table(self.tbl_name, self.tbl_pky, self.tbl_attributes)
+        self.catalog.create_index(self.tbl_name+'_DEFAULT_'+self.tbl_pky, self.tbl_name, self.tbl_pky)
         self.record.create(self.tbl_name, self.tbl_attributes)
-        # the index is built when inserting
+        self.index.create_index_file(self.tbl_name+'_DEFAULT_'+self.tbl_pky)
         end = time.time()
         print('Duration: %fs' % (end - start))
         # print('tables now:', end='')
@@ -147,6 +148,10 @@ class API():
         # transform tuples into lists here
         if _attributes is not None: 
             self.tbl_attributes = [list(attr) for attr in _attributes]
+            for attr in self.tbl_attributes: 
+                if self.tbl_pky == attr[0]: 
+                    attr[3] = 1
+                    break
             print("api attr: ", self.tbl_attributes)
 
     # retrive data from interpreter

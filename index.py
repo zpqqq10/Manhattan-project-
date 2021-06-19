@@ -270,6 +270,13 @@ class index_manager():
         else : 
             raise Exception('No such index "%s" in the memory'%index_name)
 
+
+    # create an empty file
+    def create_index_file(self, index_name):
+        os.chdir(sys.path[0])
+        file = open('./index/'+index_name+'.ind', 'wb')
+        file.close()
+
     # existence is checked outside index manager
     def drop_index_file(self, index_name):
         os.chdir(sys.path[0])
