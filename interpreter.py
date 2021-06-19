@@ -271,8 +271,8 @@ class Create(object):
         # the last value of the attribute tuple is whether the attribute is unique
         if self.is_Index:
             # create an index
-            print("Create Index: table", self.table, "index",
-                  self.index, "attribute", self.attr)
+            print("Create Index on attribute ", self.attr, " of ",
+                  self.table, ", named as ", self.index)
         else:
             # create a table
             attr = [item[0] for item in self.values]
@@ -281,6 +281,9 @@ class Create(object):
                 return
             print("create : ", self.values, "table : ",
                   self.table, "primary : ", self.primary)
+            api.retrieve_table(self.table, self.primary, self.values)
+            api.create_table()
+            print("Successfully create table '%s'" % self.table)
 
 
 class Insert(object):
@@ -340,9 +343,11 @@ class Drop(object):
     def action(self):
         global catalog
         if self.table and self.table in catalog.tables.keys():
-            print("Drop table:", self.table)
+            api.retrieve_table(self.table)
+            api.drop_table()
+            print("Successfully drop table '%s'" % self.table)
         if self.index and self.index in catalog.indices.keys():
-            print("Drop index:", self.index)
+            print("Successfully drop index '%s'" % self.index)
 
 
 class Help(object):
@@ -387,6 +392,7 @@ def p_expression_start(t):
 
 def p_expression_exit(t):
     ''' exp_exit : EXIT'''
+    api.exit()
     print("Goodbye")
     # a close method in api,commit the buffer and so on
     exit(1)

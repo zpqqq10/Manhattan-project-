@@ -159,14 +159,12 @@ class catalog_manager:
         for attr in attrlist: 
             tmp.attributes.append(Attribute(attr[0], attr[1], attr[2], attr[3]))
         self.tables[tbl_name] = tmp
-        print("Successfully create table '%s'" % tbl_name)
 
 
     # update the file & tables
     def drop_table(self, tbl_name):
         self.table_not_exists(tbl_name)
         self.tables.pop(tbl_name)
-        print("Successfully drop table '%s'" % tbl_name)
 
 
     # update the file & indices

@@ -36,12 +36,28 @@ class API():
         # attr[2]: length   attr[3]: uniqueness
         '''process self.tbl_attributes into the format above at first
         the process should be done after interpreter is complete'''
+        for attr in self.tbl_attributes: 
+            if attr[1] == 'int': 
+                attr[1] = 'i'
+            elif attr[1] == 'float': 
+                attr[1] = 'f'
+            elif attr[1] == 'char': 
+                attr[1] = attr[2] + 's'
+            attr[2] = int(attr[2])
+            if attr[3] == 1: 
+                attr[3] = True
+            elif attr[3] == 0: 
+                attr[3] = False
         # duplicate is checked in this call
-        self.catalog.create_table(self.tbl_name, self.tbl_pky)
+        self.catalog.create_table(self.tbl_name, self.tbl_pky, self.tbl_attributes)
         self.record.create(self.tbl_name, self.tbl_attributes)
         # the index is built when inserting
         end = time.time()
         print('Duration: %fs' % (end - start))
+        # print('tables now:', end='')
+        # for tbl_name in self.catalog.tables.keys(): 
+        #     print(' '+tbl_name, end='')
+        # print()
 
     def drop_table(self):
         start = time.time()
@@ -125,14 +141,16 @@ class API():
         print('Duration: %fs' % (end - start))
 
     # retrive data from interpreter
-    def retrieve_table(self, _tbl_name, _tbl_pky, _attributes):
+    def retrieve_table(self, _tbl_name, _tbl_pky = None, _attributes = None):
         self.tbl_name = _tbl_name
         self.tbl_pky = _tbl_pky
-        # attributes may need process here
-        self.tbl_attributes = _attributes
+        # transform tuples into lists here
+        if _attributes is not None: 
+            self.tbl_attributes = [list(attr) for attr in _attributes]
+            print("api attr: ", self.tbl_attributes)
 
     # retrive data from interpreter
-    def retrieve_index(self, _idx_name, _idx_key, _idx_tbl):
+    def retrieve_index(self, _idx_name, _idx_key = None, _idx_tbl = None):
         self.idx_name = _idx_name
         self.idx_key = _idx_key
         self.idx_tbl = _idx_tbl
@@ -140,9 +158,13 @@ class API():
     # retrive data from interpreter
     def retrieve_select(self, columns, conditions):
         self.s_project = columns
+        # conditions may be empty but not None
         self.s_keys = [cdt[0] for cdt in conditions]
         self.s_values = [cdt[2] for cdt in conditions]
         self.s_ops = [cdt[1] for cdt in conditions]
+
+    def exit(self): 
+        self.catalog.save()
 
 
 '''How to print: '''
