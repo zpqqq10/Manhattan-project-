@@ -53,8 +53,8 @@ class Node():
 
 class index_manager():
     def __init__(self, buffer_manager):
-        self.roots = {}
-        self.orders = {}
+        self.root = None
+        self.order = 0
         self.buffer_manager = buffer_manager
     
     # length: the length of the key attribute
@@ -130,7 +130,7 @@ class index_manager():
             return self.__search_leaf(node.children[i+1], value)
 
     def __insert(self, index_name, address, value, order): 
-        root = self.roots[index_name]
+        root = self.root
         leaf = self.__search_leaf(root, value)
 
         index = leaf.index_of_insert(value)
@@ -144,7 +144,7 @@ class index_manager():
         if node.is_full(order): 
             # a new root needs to be created
             if node.parent == None: 
-                self.roots[index_name] = newroot = Node()
+                self.root = newroot = Node()
                 node.parent = newroot
                 newkey, lchild, rchild = self.__split(node, order)
                 newroot.keys.append(newkey)
@@ -193,9 +193,9 @@ class index_manager():
         # order = (4096-2-1-2) // (length of key + 2) + 1
         # 1 is for a bool variable 'isleaf'
         # 2 is for the number of keys in a certain node
-        self.orders[index_name] = order
-        self.roots[index_name] = Node(True, None) 
-        self.roots[index_name].children.append(None)
+        self.order = order
+        self.root = Node(True, None) 
+        self.root.children.append(None)
         for i in range(len(values)): 
             self.__insert(index_name, addresses[i], values[i], order)
 
@@ -205,7 +205,7 @@ class index_manager():
         file = open('./index/'+index_name+'.ind', 'wb')
         file.close()
         stack = []
-        stack.append(self.roots[index_name])
+        stack.append(self.root)
         while len(stack) != 0: 
             node = stack[0]
             del stack[0]
@@ -227,7 +227,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i])
+                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -247,7 +247,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i])
+                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -257,6 +257,7 @@ class index_manager():
                     content = struct.pack('=hh', node.children[num].bid, 0)
                 self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                 self.buffer_manager.commitOne(index_name, 1, bid)
+        self.freeBplus()
 
     def create_index(self, index_name, addresses, values, order):
         # if len(values) != 0: 
@@ -264,11 +265,11 @@ class index_manager():
         self.print_tree(index_name)
 
     # may be of no use, do not use
-    def drop_index(self, index_name):
-        if index_name in self.roots.keys(): 
-            del self.roots[index_name]
-        else : 
-            raise Exception('No such index "%s" in the memory'%index_name)
+    # def drop_index(self, index_name):
+    #     if index_name in self.root.keys(): 
+    #         del self.root
+    #     else : 
+    #         raise Exception('No such index "%s" in the memory'%index_name)
 
 
     # create an empty file
@@ -283,10 +284,10 @@ class index_manager():
         os.remove('./index/'+index_name+'.ind')
         
 
-    def print_tree(self, index_name): 
+    def print_tree(self): 
         stack = []
         bid = 0
-        stack.append([self.roots[index_name], 1])
+        stack.append([self.root, 1])
         while len(stack) != 0: 
             node, level = stack[0]
             node.bid = bid
@@ -301,10 +302,25 @@ class index_manager():
             # print('keys: ', node.keys)
             # print('--------------')
 
-    def saveAll(self, index_names, types, lengths): 
-        for i in range(len(index_names)): 
-            if index_names[i] in self.roots.keys(): 
-                self.save_Bplus(index_names[i], types[i], lengths[i])
+    def freeBplus(self): 
+        stack = []
+        stack.append(self.root)
+        while len(stack) != 0: 
+            node = stack[0]
+            del stack[0]
+            if not node.is_leaf(): 
+                for child in node.children: 
+                    stack.append(child)
+                    child.parent = None
+                for i in range(len(node.children)): 
+                    del node.children[0]
+            else : 
+                ind = len(node.children)
+                if node.children[ind-1] is not None: 
+                    del node.children[ind-1]
+            del node
+        self.root = None
+
 
     def build_from_file(self, index_name):
         pass 
@@ -312,22 +328,19 @@ class index_manager():
 # if __name__ == '__main__': 
 #     buffer_m = buffer.bufferManager()
 #     manager = index_manager(buffer_m) 
-#     manager.drop_index_file('tobede')
-#     index_name = 'test'
-#     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24, 70, 55, 17, 31, 77, 27, 61, 20]
-#     values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
-#     addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
-#                  [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
-#     # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7]]
-#     manager.create_index(index_name, addresses, values, 4)
+#     # manager.drop_index_file('tobede')
+#     # index_name = 'test'
+#     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
+#     # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
+#     #              [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
+#     # manager.create_index(index_name, addresses, values, 4)
 #     index_name = 'tt'
 #     values = ['aaa', 'cde', 'xhice', 'xsc', 'hidcu', 'xhsayi', 'xui', 'chausi']
 #     addresses = [[40, 6], [21, 8], [6, 6], [16, 23], [37, 21], [5, 24], [17, 3], [34, 22]]
 #     manager.create_index(index_name, addresses, values, 4)
-#     index_names = ['test', 'tt']
-#     types = ['i', '10s']
-#     lengths = [4, 10]
-#     manager.saveAll(index_names, types, lengths)
-#     print(manager.search('test', 196, 'i', 4))
+#     type = '10s'
+#     length = 10
+#     manager.save_Bplus(index_name, type, length)
+#     # print(manager.search('test', 196, 'i', 4))
 #     print(manager.search('tt', 'xsc', '10s', 10))
 #     print(manager.search('tt', 'xxx', '10s', 10))
