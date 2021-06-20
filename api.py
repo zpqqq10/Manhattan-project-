@@ -1,4 +1,3 @@
-import time
 import struct
 
 class optimizer(object):
@@ -31,12 +30,19 @@ class API():
         self.s_project = self.s_keys = self.s_values = self.s_ops = None
 
     def create_table(self):
-        start = time.time()
         # attr[0]: name     attr[1]: type
         # attr[2]: length   attr[3]: uniqueness
         '''process self.tbl_attributes into the format above at first
         the process should be done after interpreter is complete'''
+        names = [attr[0] for attr in self.tbl_attributes]
+        checknames = set(names)
+        if len(checknames) != len(names): 
+            print('Error: duplicate names for attributes!')
+            return False
         for attr in self.tbl_attributes: 
+            if '"' in attr[0] or "'" in attr[0]: 
+                print('Error: illegal syntax in attribute name')
+                return False
             if attr[1] == 'int': 
                 attr[1] = 'i'
             elif attr[1] == 'float': 
@@ -53,15 +59,13 @@ class API():
         self.catalog.create_index(self.tbl_name+'_DEFAULT_'+self.tbl_pky, self.tbl_name, self.tbl_pky)
         self.record.create(self.tbl_name, self.tbl_attributes)
         self.index.create_index_file(self.tbl_name+'_DEFAULT_'+self.tbl_pky)
-        end = time.time()
-        print('Duration: %fs' % (end - start))
+        
         # print('tables now:', end='')
         # for tbl_name in self.catalog.tables.keys(): 
         #     print(' '+tbl_name, end='')
         # print()
 
     def drop_table(self):
-        start = time.time()
         # existence is checked in this call
         self.catalog.drop_table(self.tbl_name)
         # drop indices based on the table at first
@@ -74,11 +78,8 @@ class API():
             self.drop_index()
         # drop the table at last
         self.record.drop_record_file(self.tbl_name)
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     def create_index(self):
-        start = time.time()
         # duplicate, existence and uniqueness is checked in this call
         self.catalog.create_index(self.idx_name, self.idx_tbl, self.idx_key)
         # attr[0]: name     attr[1]: type
@@ -104,19 +105,13 @@ class API():
         self.index.create_index(self.idx_name, addresses, values, order)
         # save the B plus tree as a file
         self.index.save_Bplus(self.idx_name, type, length)
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     def drop_index(self):
-        start = time.time()
         # existence is checked in this call
         self.catalog.drop_index(self.idx_name)
         self.index.drop_index_file(self.idx_name)
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     def insert_record(self, table, attr, value):
-        start = time.time()
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if (len(attr) != len(value)):
@@ -146,7 +141,7 @@ class API():
         # string process
         for i, item in self.catalog.tables[table].attributes:
             if (item[-1] == 's'):
-                if (value[i][0] == '"' and value[i][-1] == '"') or (value[i][0] == ''' and value[i][-1] == '''):
+                if (value[i][0] == '"' and value[i][-1] == '"') or (value[i][0] == "'" and value[i][-1] == "'"):
                     value[i] = value[1:-1]
                 else:
                     print("ERROR: The quote signal of string value is wrong")
@@ -162,18 +157,12 @@ class API():
                 break
         self.index.create_index(index_name, result_ptr, result_value, order)
         self.index.save_Bplus(index_name, primary_type, primary_length)
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     def delete_record(self):
-        start = time.time()
         # mind to encode the string before calling self.record.insert()
         '''update the record and the index'''
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     def select(self, table, cols, conditions):
-        start = time.time()
         # checke index
         # for item in self.catalog.indices:
         #     if (self.catalog.indices[item][0] == table):
@@ -233,8 +222,6 @@ class API():
             print('|\n')
             print('-' * (17 * len(cols) + 1))
         print("Returned %d entrys," % len(result_record),end='')    
-        end = time.time()
-        print('Duration: %fs' % (end - start))
 
     # retrive data from interpreter
     def retrieve_table(self, _tbl_name, _tbl_pky = None, _attributes = None):

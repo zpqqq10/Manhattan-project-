@@ -101,15 +101,14 @@ class index_manager():
                 # find the value and return its position
                 # the last child is the pointer
                 if value not in keys[:num]:
-                    raise Exception('The value %s is not in the table'%value) 
+                    return None
                 else: 
                     res_bid, res_offset = children[keys.index(value)]
-                    break
+                    return res_bid, res_offset
             keys = []
             children = []
             cur_offset = 0
-        
-        return res_bid, res_offset
+
 
     def __search_leaf(self, node, value): 
         # a leaf

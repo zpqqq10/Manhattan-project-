@@ -3,6 +3,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 from catalog import catalog_manager, Table
 import collections
+import time
 # global variables for each manager
 catalog = None
 record = None
@@ -213,8 +214,11 @@ class Select(object):
 
     def action(self):
         """展示数据"""
+        start = time.time()
         api.select(self.table, self.columns, self.conditions)
         print("self.values", self.columns, self.conditions)
+        end = time.time()
+        print('Duration: %fs' % (end - start))
 
 
 class Delete(object):
@@ -234,8 +238,10 @@ class Delete(object):
 
     def action(self):
         """展示数据"""
-
+        start = time.time()
         print("self.table", self.table, "self,condition", self.conditions)
+        end = time.time()
+        print('Duration: %fs' % (end - start))
 
 
 class Create(object):
@@ -273,10 +279,14 @@ class Create(object):
         # the last value of the attribute tuple is whether the attribute is unique
         if self.is_Index:
             # create an index
+            start = time.time()
             print("Create Index on attribute ", self.attr, " of ",
                   self.table, ", named as ", self.index)
+            end = time.time()
+            print('Duration: %fs' % (end - start))
         else:
             # create a table
+            start = time.time()
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
                 print("error PRIMARY KEY")
@@ -286,6 +296,8 @@ class Create(object):
             api.retrieve_table(self.table, self.primary, self.values)
             api.create_table()
             print("Successfully create table '%s'" % self.table)
+            end = time.time()
+            print('Duration: %fs' % (end - start))
 
 
 class Insert(object):
@@ -308,6 +320,7 @@ class Insert(object):
     def action(self):
         if self._stack.is_columns:
             if len(self._stack) and len(self._stack) % 2 == 0:
+                start = time.time()
                 index = int(len(self._stack) / 2)
                 if index != len(catalog.tables[self.table].attributes):
                     print("error default columns")
@@ -317,6 +330,8 @@ class Insert(object):
                 print("Insert with columns: attributes:",
                       attrs, "values:", values)
                 api.insert_record(self.table, attrs, values)
+                end = time.time()
+                print('Duration: %fs' % (end - start))
             else:
                 print(" error columns and values not equal")
                 return
@@ -345,11 +360,17 @@ class Drop(object):
     def action(self):
         global catalog
         if self.table and self.table in catalog.tables.keys():
+            start = time.time()
             api.retrieve_table(self.table)
             api.drop_table()
             print("Successfully drop table '%s'" % self.table)
+            end = time.time()
+            print('Duration: %fs' % (end - start))
         if self.index and self.index in catalog.indices.keys():
+            start = time.time()
             print("Successfully drop index '%s'" % self.index)
+            end = time.time()
+            print('Duration: %fs' % (end - start))
 
 
 class Help(object):
