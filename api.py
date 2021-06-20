@@ -1,3 +1,4 @@
+import enum
 import struct
 
 class optimizer(object):
@@ -111,20 +112,23 @@ class API():
         self.catalog.drop_index(self.idx_name)
         self.index.drop_index_file(self.idx_name)
 
-    def insert_record(self, table, attr, value):
+    def insert_record(self, table, value, attr = None):
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
-        if (len(attr) != len(value)):
+        if attr is not None and (len(attr) != len(value)):
             print("Error: The number of input values DOES NOT MATCH the number of input attributes")
             return False
         '''transform the input to the correct format'''
         # I think there is nothing need transforming
         '''call self.index.search() to check uniqueness'''
         primary = self.catalog.tables[table].primary_key
-        for i, item in attr:
-            if (item == primary):
-                primary_index = i
-                break
+        if attr is None: 
+            for i, item in enumerate(self.catalog.tables[table].attributes): 
+                if (item.name == primary):
+                    primary_index = i
+                    break
+        else : 
+            pass
         primary_value = value[primary_index]
         for item in self.catalog.tables[table].attributes:
             if self.catalog.tables[table].attributes[item].name == primary:
@@ -134,29 +138,35 @@ class API():
         else:
             primary_length = int(primary_type[:-1])
         uniqRes = self.index.search(table, primary_value, primary_type, primary_length)
-        if (uniqRes) : # Not unique
+        if uniqRes : # Not unique
             print("ERROR: the input data has duplicated Primary Key Value")
             return False
 
         # string process
-        for i, item in self.catalog.tables[table].attributes:
-            if (item[-1] == 's'):
+        for i, item in enumerate(self.catalog.tables[table].attributes):
+            if item.type[-1] == 's':
                 if (value[i][0] == '"' and value[i][-1] == '"') or (value[i][0] == "'" and value[i][-1] == "'"):
                     value[i] = value[1:-1]
                 else:
                     print("ERROR: The quote signal of string value is wrong")
                     return False
+            elif item.type == 'i': 
+                value[i] = int(value[i])
+            elif item.type == 'f': 
+                value[i] = float(value[i])
         '''call self.record.insert()'''
-        self.record.insert(table, attr, value)
+        attribute = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
+        self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
-        (result_value, result_ptr) = self.record.scan_all(table, (), attr)
+        result_value, result_ptr = self.record.scan_all(table, [], attr)
         order = (4096-2-1-2) // (primary_length + 2) + 1
-        for item in self.catalog.indices:
+        tmp = []
+        for item in self.catalog.indices.keys():
             if self.catalog.indices[item][0] == table:
-                index_name = item
-                break
-        self.index.create_index(index_name, result_ptr, result_value, order)
-        self.index.save_Bplus(index_name, primary_type, primary_length)
+                tmp.append(item)
+        for index_name in tmp: 
+            self.index.create_index(index_name, result_ptr, result_value, order)
+            self.index.save_Bplus(index_name, primary_type, primary_length)
 
     def delete_record(self):
         # mind to encode the string before calling self.record.insert()

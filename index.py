@@ -101,7 +101,7 @@ class index_manager():
                 # find the value and return its position
                 # the last child is the pointer
                 if value not in keys[:num]:
-                    return None
+                    return False
                 else: 
                     res_bid, res_offset = children[keys.index(value)]
                     return res_bid, res_offset
@@ -226,7 +226,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -246,7 +246,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer

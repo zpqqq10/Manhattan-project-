@@ -329,7 +329,7 @@ class Insert(object):
                 values = self._stack[index:]
                 print("Insert with columns: attributes:",
                       attrs, "values:", values)
-                api.insert_record(self.table, attrs, values)
+                api.insert_record(self.table, values, attrs)
                 end = time.time()
                 print('Duration: %fs' % (end - start))
             else:
@@ -342,6 +342,7 @@ class Insert(object):
                 return
             self._stack._stack.reverse()
             print("Insert without columns: values:", self._stack)
+            print(self.table)
 
 
 class Drop(object):
