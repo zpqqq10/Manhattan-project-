@@ -73,9 +73,10 @@ t_INDEX = r'index|INDEX'
 t_ON = r'ON|on'
 t_EXECFILE = r'EXECFILE|execfile'
 t_HELP = r'HELP|help'
-
+# ''' '"[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'| '''
 def t_COLUMN(t):
-    r'[a-zA-Z0-9/_.-]+'
+    # r'[a-zA-Z0-9/_.-]+'
+    r''' "[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'|[a-zA-Z0-9/_.-]+ '''
     if t.value in ['FROM', 'from']:
         t.type = 'FROM'
     if t.value in ['CREATE', 'create']:
