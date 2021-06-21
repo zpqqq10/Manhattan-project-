@@ -41,9 +41,9 @@ class catalog_manager:
                 uniqueness, = struct.unpack('=?', file.read(1))
                 type, = struct.unpack('=B', file.read(1))
                 if type == 1: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, 'i', 0, uniqueness))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'i', 4, uniqueness))
                 elif type == 2: 
-                    self.tables[table_name].attributes.append(Attribute(attr_name, 'f', 0, uniqueness))
+                    self.tables[table_name].attributes.append(Attribute(attr_name, 'f', 4, uniqueness))
                 elif type == 3:
                     length, = struct.unpack('=i', file.read(4))
                     self.tables[table_name].attributes.append(Attribute(attr_name, str(length)+'s', length, uniqueness))
@@ -159,14 +159,12 @@ class catalog_manager:
         for attr in attrlist: 
             tmp.attributes.append(Attribute(attr[0], attr[1], attr[2], attr[3]))
         self.tables[tbl_name] = tmp
-        print("Successfully create table '%s'" % tbl_name)
 
 
     # update the file & tables
     def drop_table(self, tbl_name):
         self.table_not_exists(tbl_name)
         self.tables.pop(tbl_name)
-        print("Successfully drop table '%s'" % tbl_name)
 
 
     # update the file & indices
