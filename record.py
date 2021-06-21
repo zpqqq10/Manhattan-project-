@@ -89,7 +89,7 @@ class record_manager:
     """
     # constraint list of tuples
     # (attr_index0,ops,value)
-    # ops (<,0) (<=,1) (>,2) (>=,3) (==,4)
+    # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
     def check_record(self,record,attr,constraint):
         for item in constraint:
             if item[1] == 0:
@@ -117,6 +117,11 @@ class record_manager:
                     continue
                 else:
                     return False 
+            elif item[1] == 5: 
+                if record[item[0]+1] != item[2]: 
+                    continue
+                else: 
+                    return False
         return True
     # this methods return the list of tuples corresponding to the constraints
     """
@@ -139,7 +144,6 @@ class record_manager:
             if bid==0:
                 valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack("=?hh?h", block_content[:8])
                 idx += 8
-                record_length_a = 28
             while idx + record_length_a * 8 <= block_len:
                 record = struct.unpack(format,block_content[idx:idx+record_length_r])
                 if record[0] & self.check_record(record,attr,constraint):

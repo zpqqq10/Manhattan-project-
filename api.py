@@ -23,12 +23,6 @@ class API():
         # index
         #   name        key of the index
         self.idx_name = self.idx_key = self.idx_tbl = None
-        # search
-        # columns to be listed
-        #                keys to be selected on
-        #                               values of the selected keys
-        #                                               operations, <=>
-        self.s_project = self.s_keys = self.s_values = self.s_ops = None
 
     def create_table(self):
         # attr[0]: name     attr[1]: type
@@ -57,9 +51,9 @@ class API():
                 attr[3] = False
         # duplicate is checked in this call
         self.catalog.create_table(self.tbl_name, self.tbl_pky, self.tbl_attributes)
-        self.catalog.create_index(self.tbl_name+'_DEFAULT_'+self.tbl_pky, self.tbl_name, self.tbl_pky)
+        self.catalog.create_index(self.tbl_name, self.tbl_name, self.tbl_pky)
         self.record.create(self.tbl_name, self.tbl_attributes)
-        self.index.create_index_file(self.tbl_name+'_DEFAULT_'+self.tbl_pky)
+        self.index.create_index_file(self.tbl_name)
         
         # print('tables now:', end='')
         # for tbl_name in self.catalog.tables.keys(): 
@@ -119,20 +113,28 @@ class API():
             print("Error: The number of input values DOES NOT MATCH the number of input attributes")
             return False
         '''transform the input to the correct format'''
-        # I think there is nothing need transforming
+        # string process
+        for i, item in enumerate(self.catalog.tables[table].attributes):
+            if item.type[-1] == 's':
+                value[i] = value[i][1:-1]
+                value[i] = str(value[i])
+                value[i] = value[i].encode('utf-8')
+            elif item.type == 'i': 
+                value[i] = int(value[i])
+            elif item.type == 'f': 
+                value[i] = float(value[i])
         '''call self.index.search() to check uniqueness'''
         primary = self.catalog.tables[table].primary_key
         if attr is None: 
-            for i, item in enumerate(self.catalog.tables[table].attributes): 
-                if (item.name == primary):
-                    primary_index = i
-                    break
+            primary_index = self.catalog.index_in_table(table, primary)
+            attr = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
         else : 
             pass
         primary_value = value[primary_index]
-        for item in self.catalog.tables[table].attributes:
-            if self.catalog.tables[table].attributes[item].name == primary:
-                primary_type = self.catalog.tables[table].attributes[item].type
+        tmp = []
+        '''read a record here and check all the uniqueness'''
+        '''bug'''
+        primary_type = self.catalog.tables[table].attributes[primary_index].type
         if primary_type[0] == 'i' or primary_type[0] == 'f':
             primary_length = 4
         else:
@@ -142,31 +144,21 @@ class API():
             print("ERROR: the input data has duplicated Primary Key Value")
             return False
 
-        # string process
-        for i, item in enumerate(self.catalog.tables[table].attributes):
-            if item.type[-1] == 's':
-                if (value[i][0] == '"' and value[i][-1] == '"') or (value[i][0] == "'" and value[i][-1] == "'"):
-                    value[i] = value[1:-1]
-                else:
-                    print("ERROR: The quote signal of string value is wrong")
-                    return False
-            elif item.type == 'i': 
-                value[i] = int(value[i])
-            elif item.type == 'f': 
-                value[i] = float(value[i])
         '''call self.record.insert()'''
         attribute = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
         self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
         result_value, result_ptr = self.record.scan_all(table, [], attr)
         order = (4096-2-1-2) // (primary_length + 2) + 1
-        tmp = []
+        tmp.clear()
         for item in self.catalog.indices.keys():
             if self.catalog.indices[item][0] == table:
-                tmp.append(item)
-        for index_name in tmp: 
-            self.index.create_index(index_name, result_ptr, result_value, order)
+                tmp.append([item, self.catalog.index_in_table(table, self.catalog.indices[item][1])])
+        for index_name, i in tmp: 
+            key_value = [item[i] for item in result_value]
+            self.index.create_index(index_name, result_ptr, key_value, order)
             self.index.save_Bplus(index_name, primary_type, primary_length)
+        print('Successfully insert')
 
     def delete_record(self):
         # mind to encode the string before calling self.record.insert()
@@ -188,24 +180,50 @@ class API():
         # if not, scan all the record
         
         # decode if need
+        self.catalog.table_not_exists(table)
         if len(cols) == 0:
             cols = []
             for item in self.catalog.tables[table].attributes:
-                if item.length == 0:
-                    cols.append((item.name, item.type, 4, item.uniqueness))
-                else: 
-                    cols.append((item.name, item.type, item.length, item.uniqueness))
+                cols.append((item.name, item.type, item.length, item.uniqueness))
                 # print(item.length)
-        (result_record, result_ptr) = self.record.scan_all(table, conditions, cols)
-        stringFlag = [0 for i in range(len(cols) - 1)]
-        for item in cols:
-            for col in self.catalog.tables[table].attributes:
-                if col.name == item[0]:
-                    type = col.type
+        else: 
+            tmp = [item for item in cols]
+            cols.clear()
+            for item in tmp: 
+                self.catalog.key_not_exists(table, item)
+                for attr in self.catalog.tables[table].attributes: 
+                    if item == attr.name: 
+                        cols.append(attr.name, attr.type, attr.length, attr.uniqueness)
+        # process constraints
+        conditions = [list(item) for item in conditions]
+        for item in conditions: 
+            if item[1] == '<': 
+                item[1] = 0
+            elif item[1] == '<=': 
+                item[1] = 1
+            elif item[1] == '>': 
+                item[1] = 2
+            elif item[1] == '>=': 
+                item[1] = 3
+            elif item[1] == '=': 
+                item[1] = 4
+            elif item[1] == '<>': 
+                item[1] = 5
+            else: 
+                raise Exception('Error: illegal operator')
+            for i, attr in enumerate(self.catalog.tables[table].attributes): 
+                if attr.name == item[0]: 
+                    item[0] = i
                     break
+        (result_record, result_ptr) = self.record.scan_all(table, conditions, cols)
+        # print(result_record)
+        stringFlag = [0 for i in range(len(cols))]
+        for item in cols:
+            type = item[1]
             if type[-1] == 's':
                 stringFlag[cols.index(item)] = int(type[:-1])
         namelength = 0
+        print('-' * (17 * len(cols) + 1))
         for i in cols:
             namelength = namelength + len(i[0])
             if len(str(i[0])) > 14:
@@ -213,25 +231,25 @@ class API():
             else:
                 output = str(i[0])
             print('|',output.center(15),end='')
-        print('|\n')
+        print('|')
         print('-' * (17 * len(cols) + 1))
         for i in result_record:
-            for j in range(len(cols) - 1):
+            for j in range(len(cols)):
                 if stringFlag[j] != 0:
-                    string = i[j].decode("utf-8")
+                    string = i[j].decode("utf-8").strip('\x00')
                     if len(str(string)) > 14:
                         output = str(string)[0:14]
                     else:
                         output = str(string)
                 else:
                     if len(str(i[j])) > 14:
-                        output = str(i[j])[0:14]
+                        output = str(round(i[j], 4))[0:14]
                     else:
-                        output = str(i[j])
+                        output = str(round(i[j], 4))
                 print('|',output.center(15) ,end='')
-            print('|\n')
+            print('|')
             print('-' * (17 * len(cols) + 1))
-        print("Returned %d entrys," % len(result_record),end='')    
+        print("Returned %d entrys" % len(result_record))    
 
     # retrive data from interpreter
     def retrieve_table(self, _tbl_name, _tbl_pky = None, _attributes = None):
@@ -244,21 +262,13 @@ class API():
                 if self.tbl_pky == attr[0]: 
                     attr[3] = 1
                     break
-            print("api attr: ", self.tbl_attributes)
+            # print("api attr: ", self.tbl_attributes)
 
     # retrive data from interpreter
     def retrieve_index(self, _idx_name, _idx_key = None, _idx_tbl = None):
         self.idx_name = _idx_name
         self.idx_key = _idx_key
         self.idx_tbl = _idx_tbl
-
-    # retrive data from interpreter
-    def retrieve_select(self, columns, conditions):
-        self.s_project = columns
-        # conditions may be empty but not None
-        self.s_keys = [cdt[0] for cdt in conditions]
-        self.s_values = [cdt[2] for cdt in conditions]
-        self.s_ops = [cdt[1] for cdt in conditions]
 
     def exit(self): 
         self.catalog.save()

@@ -44,8 +44,8 @@ if __name__ == "__main__":
     print()
     
     while True:
-        try:
-            data = input("sql>")
-            interpreter(data)
-        except Exception as e:
-            print(e)
+        # try:
+        data = input("sql>")
+        interpreter(data)
+        # except Exception as e:
+        #     print(e)

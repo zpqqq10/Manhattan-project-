@@ -69,6 +69,10 @@ class index_manager():
         while True: 
             # build a node
             cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
+            # empty
+            if cur_block[:2] == b'': 
+                # print('empty')
+                return False
             isleaf, num = struct.unpack('=?h', cur_block[:3])
             cur_offset = 3
             for i in range(num): 
@@ -261,7 +265,7 @@ class index_manager():
     def create_index(self, index_name, addresses, values, order):
         # if len(values) != 0: 
         self.build_Bplus(index_name, addresses, values, order)
-        self.print_tree(index_name)
+        self.print_tree()
 
     # may be of no use, do not use
     # def drop_index(self, index_name):
