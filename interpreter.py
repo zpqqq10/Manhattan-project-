@@ -165,7 +165,8 @@ class Stack(object):
 
     def __str__(self):
         print(self._stack)
-        return
+
+        return 
 
     def __getitem__(self, item):
         return self._stack[item]
@@ -216,7 +217,7 @@ class Select(object):
         """展示数据"""
         start = time.time()
         api.select(self.table, self.columns, self.conditions)
-        print("self.values", self.columns, self.conditions)
+        # print(self.table, self.columns, self.conditions)
         end = time.time()
         print('Duration: %fs' % (end - start))
 
@@ -291,8 +292,8 @@ class Create(object):
             if self.primary not in attr:
                 print("error PRIMARY KEY")
                 return
-            print("create : ", self.values, "table : ",
-                  self.table, "primary : ", self.primary)
+            # print("create : ", self.values, "table : ",
+            #       self.table, "primary : ", self.primary)
             api.retrieve_table(self.table, self.primary, self.values)
             api.create_table()
             print("Successfully create table '%s'" % self.table)
@@ -329,7 +330,7 @@ class Insert(object):
                 values = self._stack[index:]
                 print("Insert with columns: attributes:",
                       attrs, "values:", values)
-                api.insert_record(self.table, attrs, values)
+                api.insert_record(self.table, values, attrs)
                 end = time.time()
                 print('Duration: %fs' % (end - start))
             else:
@@ -340,8 +341,15 @@ class Insert(object):
                 print("input values len {0} not equal table columes len {1}".
                       format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 return
+            start = time.time()
             self._stack._stack.reverse()
-            print("Insert without columns: values:", self._stack._stack)
+
+            api.insert_record(self.table, self._stack._stack)
+            end = time.time()
+            print('Duration: %fs' % (end - start))
+            # print("Insert without columns: values:", self._stack)
+            # print(self.table)
+
 
 
 class Drop(object):

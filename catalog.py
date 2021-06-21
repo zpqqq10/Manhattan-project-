@@ -149,6 +149,12 @@ class catalog_manager:
             if tbl_name == self.indices[idx_name][0] and key == self.indices[idx_name][1]: 
                 return idx_name
         return False
+
+
+    def index_in_table(self, tbl_name, idx_name): 
+        for i, attr in enumerate(self.tables[tbl_name].attributes): 
+            if attr.name == idx_name: 
+                return i
             
 
     # update the file & tables

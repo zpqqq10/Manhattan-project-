@@ -69,6 +69,10 @@ class index_manager():
         while True: 
             # build a node
             cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
+            # empty
+            if cur_block[:2] == b'': 
+                # print('empty')
+                return False
             isleaf, num = struct.unpack('=?h', cur_block[:3])
             cur_offset = 3
             for i in range(num): 
@@ -101,7 +105,7 @@ class index_manager():
                 # find the value and return its position
                 # the last child is the pointer
                 if value not in keys[:num]:
-                    return None
+                    return False
                 else: 
                     res_bid, res_offset = children[keys.index(value)]
                     return res_bid, res_offset
@@ -226,7 +230,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -246,7 +250,7 @@ class index_manager():
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, 4)
                     cur_offset += 4
                     # data read from file is encoded
-                    content = struct.pack('='+type, node.keys[i].encode('utf-8'))
+                    content = struct.pack('='+type, node.keys[i])
                     self.buffer_manager.write(index_name, 1, bid, cur_offset, content, length)
                     cur_offset += length
                 # add the last pointer
@@ -261,7 +265,7 @@ class index_manager():
     def create_index(self, index_name, addresses, values, order):
         # if len(values) != 0: 
         self.build_Bplus(index_name, addresses, values, order)
-        self.print_tree(index_name)
+        self.print_tree()
 
     # may be of no use, do not use
     # def drop_index(self, index_name):

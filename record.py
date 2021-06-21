@@ -89,7 +89,7 @@ class record_manager:
     """
     # constraint list of tuples
     # (attr_index0,ops,value)
-    # ops (<,0) (<=,1) (>,2) (>=,3) (==,4)
+    # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
     def check_record(self,record,attr,constraint):
         for item in constraint:
             if item[1] == 0:
@@ -117,6 +117,11 @@ class record_manager:
                     continue
                 else:
                     return False 
+            elif item[1] == 5: 
+                if record[item[0]+1] != item[2]: 
+                    continue
+                else: 
+                    return False
         return True
     # this methods return the list of tuples corresponding to the constraints
     """
