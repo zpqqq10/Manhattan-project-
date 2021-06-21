@@ -33,3 +33,11 @@ exit
 
 create table students (sid int,name char(10) unique,sex char(1),phone int, gpa float, primary key(sid));
 insert into students values(3192222, 'Cheung', 'F', 1234567, 3.1); 
+insert into students values(3193333, 'Chan', 'M', 7654321, 4.5); 
+insert into students values(3194442, 'Zheng', 'M', 12334537, 4.1); 
+insert into students values(3196533, 'Xin', 'F', 7643321, 2.5); 
+insert into students values(3192334, 'Cheug', 'F', 1263567, 3.8); 
+insert into students values(3193653, 'Chun', 'M', 7673221, 4.2); 
+insert into students values(3192442, 'Zhong', 'M', 1236237, 4.6); 
+insert into students values(3196556, 'Xiu', 'F', 7645221, 2.8); 
+insert into students values(3196116, 'Xu', 'F', 7645221, 3.8); 

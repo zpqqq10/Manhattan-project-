@@ -1,13 +1,14 @@
 import struct
 import os
 import sys
-from buffer import bufferManager,bufferBlock
+from buffer import bufferManager, bufferBlock
 from functools import reduce
 
 
 class record_manager:
-    def __init__(self,buffer):
+    def __init__(self, buffer):
         self.buffer_manager = buffer
+
 
     """
     tbl_name        : the name of the table
@@ -17,14 +18,15 @@ class record_manager:
     """
     def insert(self, tbl_name, attr, value):
         # temporarily use file open, lately will use buffer
-        bytes = self.buffer_manager.read(tbl_name,0,0,0,8)
+        bytes = self.buffer_manager.read(tbl_name, 0, 0, 0, 8)
         valid_bytes, free_bid, free_off, tail_flag, length = struct.unpack(
             "=?hh?h", bytes)
         if tail_flag == False:
             # wirte the record in free_bid:free_off
             # if the free record is not the tail, get the first bytes which record the pre free list head
-            
-            pre_free_list = self.buffer_manager.read(tbl_name,0,free_bid,free_off << 3,6)
+
+            pre_free_list = self.buffer_manager.read(
+                tbl_name, 0, free_bid, free_off << 3, 6)
 
         length_ = sum([i[2] for i in attr]) + 1
         pad_num = (length << 3) - length_
@@ -32,21 +34,23 @@ class record_manager:
                                                                      y: struct.pack(x[1], y), attr, value))
         bytes += pad_num * struct.pack("=x")
         # wirte the record in free_bid:free_off
-        self.buffer_manager.write(tbl_name,0,free_bid,free_off << 3,bytes,length << 3)
+        self.buffer_manager.write(
+            tbl_name, 0, free_bid, free_off << 3, bytes, length << 3)
         if tail_flag:
             # compute the next free record
             next_free_bid = free_bid
             next_free_off = free_off+length
-            if (4096 - next_free_off * 8 ) < length * 8:
+            if (4096 - next_free_off * 8) < length * 8:
                 next_free_bid = free_bid + 1
                 next_free_off = 0
             bytes = struct.pack(
                 "=?hh?", False, next_free_bid, next_free_off, True)
         else:
             bytes = pre_free_list
-        self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
-        return (free_bid,free_off << 3)
-        
+        self.buffer_manager.write(tbl_name, 0, 0, 0, bytes, 6)
+        return (free_bid, free_off << 3)
+
+
     """
     tbl_name        : the name of the table
     bid             : the bid of the record need to be delete
@@ -56,10 +60,12 @@ class record_manager:
     def delete_with_index(self, tbl_name, bid, off):
         # temporarily use file open, lately will use buffer
         # read the free_list
-        free_list = self.buffer_manager.read(tbl_name,0,0,0,6)
-        self.buffer_manager.write(tbl_name,0,bid,off,free_list,6)
+        free_list = self.buffer_manager.read(tbl_name, 0, 0, 0, 6)
+        self.buffer_manager.write(tbl_name, 0, bid, off, free_list, 6)
         bytes = struct.pack("=?hh?", False, bid, off >> 3, False)
-        self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
+        self.buffer_manager.write(tbl_name, 0, 0, 0, bytes, 6)
+
+    
     """
     tbl_name        : the name of the table
     attr            : the list of the attribute tuple
@@ -81,6 +87,8 @@ class record_manager:
             f.write(content)
             f.close()
         return 0
+
+
     """
     record          : the tuple of record 
     attr            : the list of the attribute tuple
@@ -90,39 +98,41 @@ class record_manager:
     # constraint list of tuples
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
-    def check_record(self,record,attr,constraint):
+    def check_record(self, record, attr, constraint):
         for item in constraint:
             if item[1] == 0:
                 if record[item[0]+1] < item[2]:
                     continue
                 else:
-                    return False 
+                    return False
             elif item[1] == 1:
                 if record[item[0]+1] <= item[2]:
                     continue
                 else:
-                    return False 
-            elif item[1] ==2:
+                    return False
+            elif item[1] == 2:
                 if record[item[0]+1] > item[2]:
                     continue
                 else:
-                    return False 
+                    return False
             elif item[1] == 3:
                 if record[item[0]+1] >= item[2]:
                     continue
                 else:
-                    return False 
+                    return False
             elif item[1] == 4:
                 if record[item[0]+1] == item[2]:
                     continue
                 else:
-                    return False 
-            elif item[1] == 5: 
-                if record[item[0]+1] != item[2]: 
+                    return False
+            elif item[1] == 5:
+                if record[item[0]+1] != item[2]:
                     continue
-                else: 
+                else:
                     return False
         return True
+
+    
     # this methods return the list of tuples corresponding to the constraints
     """
     tbl_name        : the name of the table
@@ -130,31 +140,35 @@ class record_manager:
     attr            : the list of the attribute tuple 
     return value    : a tuple of two result list: list of the record value and list of the position of record 
     """
-    def scan_all(self,tbl_name,constraint, attr):
+    def scan_all(self, tbl_name, constraint, attr):
         bid = 0
         result_record = []
         result_ptr = []
-        format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
+        format = "=?"+reduce(lambda x, y: x+y[1], attr, "")
         record_length_r = sum([i[2] for i in attr]) + 1
         block_len = 4096
         while block_len == 4096:
-            block_content = self.buffer_manager.read_block(tbl_name,0,bid)
+            block_content = self.buffer_manager.read_block(tbl_name, 0, bid)
             block_len = len(block_content)
             idx = 0
-            if bid==0:
-                valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack("=?hh?h", block_content[:8])
+            if bid == 0:
+                valid_bytes, free_bid, free_off, tail_flag, record_length_a = struct.unpack(
+                    "=?hh?h", block_content[:8])
                 idx += 8
             while idx + record_length_a * 8 <= block_len:
-                record = struct.unpack(format,block_content[idx:idx+record_length_r])
-                if record[0] & self.check_record(record,attr,constraint):
+                record = struct.unpack(
+                    format, block_content[idx:idx+record_length_r])
+                if record[0] & self.check_record(record, attr, constraint):
                     result_record.append(record[1:])
-                    result_ptr.append((bid,idx))
+                    result_ptr.append((bid, idx))
                 idx += record_length_a*8
             bid = bid + 1
-        result = (result_record,result_ptr)
-        return result        
+        result = (result_record, result_ptr)
+        return result
+
+    
     # domain : a list of tuples (bid,off)
-    #(bid,off) should be valid, this methods will not check the correctness
+    # (bid,off) should be valid, this methods will not check the correctness
     """
     tbl_name        : the name of the table
     constraint      : the constraint list of tuples
@@ -162,24 +176,26 @@ class record_manager:
     domain          : the list of the position of the record need to be scanned
     return value    : a tuple of two result list: list of the record value and list of the position of record 
     """
-    def scan_with_index(self,tbl_name,constraint,attr,domain):
+    def scan_with_index(self, tbl_name, constraint, attr, domain):
         result_record = []
         result_ptr = []
-        format = "=?"+reduce(lambda x,y:x+y[1],attr,"")
+        format = "=?"+reduce(lambda x, y: x+y[1], attr, "")
         record_length_r = sum([i[2] for i in attr]) + 1
         for item in domain:
-            content = self.buffer_manager.read(tbl_name,0,item[0],item[1],record_length_r)
-            record = struct.unpack(format,content)
-            if record[0] & self.check_record(record,attr,constraint):
+            content = self.buffer_manager.read(
+                tbl_name, 0, item[0], item[1], record_length_r)
+            record = struct.unpack(format, content)
+            if record[0] & self.check_record(record, attr, constraint):
                 result_record.append(record[1:])
                 result_ptr.append(item)
-        return (result_record,result_ptr)
+        return (result_record, result_ptr)
 
     # existence is checked outside record manager
     def drop_record_file(self, tbl_name):
         os.chdir(sys.path[0])
         os.remove('./record/'+tbl_name+'.rec')
-            
+
+
 if __name__ == "__main__":
     # test
     os.chdir(sys.path[0])

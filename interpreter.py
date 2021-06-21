@@ -61,7 +61,7 @@ t_TABLE = r'TABLE|table'
 t_COMMA = r','
 t_STAR = r'\*'
 t_END = r';'
-t_OP = r'>|<|>=|<=|=|<>'
+t_OP = r'<>|>=|<=|=|<|>'
 t_TYPE = r'INT|FLOAT|int|float'
 t_CHAR = r'CHAR|char'
 t_EXIT = r'QUIT|quit|EXIT|exit'
@@ -215,6 +215,7 @@ class Select(object):
     def action(self):
         """展示数据"""
         start = time.time()
+        self.columns.reverse()
         api.select(self.table, self.columns, self.conditions)
         # print(self.table, self.columns, self.conditions)
         end = time.time()
@@ -239,7 +240,7 @@ class Delete(object):
     def action(self):
         """展示数据"""
         start = time.time()
-        print("self.table", self.table, "self,condition", self.conditions)
+        api.delete_record(self.table, self.conditions)
         end = time.time()
         print('Duration: %fs' % (end - start))
 
@@ -280,8 +281,10 @@ class Create(object):
         if self.is_Index:
             # create an index
             start = time.time()
-            print("Create Index on attribute ", self.attr, " of ",
-                  self.table, ", named as ", self.index)
+            # print("Create Index on attribute ", self.attr, " of ",
+            #       self.table, ", named as ", self.index)
+            api.retrieve_index(self.index, self.attr, self.table)
+            api.create_index()
             end = time.time()
             print('Duration: %fs' % (end - start))
         else:
@@ -373,6 +376,7 @@ class Drop(object):
             print('Duration: %fs' % (end - start))
         if self.index and self.index in catalog.indices.keys():
             start = time.time()
+            api.drop_index(self.index)
             print("Successfully drop index '%s'" % self.index)
             end = time.time()
             print('Duration: %fs' % (end - start))
@@ -394,7 +398,7 @@ class Help(object):
         print('- delete records from a table')
         print('- select from a table')
         print('- execute instructions in a file')
-        print('- enter "exit" to exit Minisql')
+        print('- enter "exit" or "quit" to exit Minisql')
         
 
 def p_statement_expr(t):
@@ -550,7 +554,7 @@ def p_expression_insert(t):
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
                      | COLUMN OP COLUMN AND exp_condition'''
-    print("condition", t[1], t[2], t[3])
+    # print("condition", t[1], t[2], t[3])
     condition_stack.append((t[1], t[2], t[3]))
 
 
