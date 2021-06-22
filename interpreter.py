@@ -435,9 +435,13 @@ def p_statement_expr(t):
     '''expressions : expression
                     | expressions expression
                     | exp_exit'''
-    if current_action:
-        current_action.action()
-    reset_action()
+    try:
+        if current_action:
+            current_action.action()
+        reset_action()
+    except Exception as e:
+        reset_action()
+        raise
 
 
 def p_expression_start(t):
