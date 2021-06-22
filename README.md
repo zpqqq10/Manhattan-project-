@@ -1,5 +1,4 @@
 # Manhattan-project-
-for minisql 
 
 How to represent an address in a file?
 * Use 4 bytes (use `struct`)
