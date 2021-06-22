@@ -224,3 +224,4 @@ if __name__ == "__main__":
     # t.create_index('index_xyz', 'xyz', 'sid')
     # t.drop_index('indexabc')
     t.save()
+

@@ -3,12 +3,17 @@ import struct
 
 
 class optimizer(object):
-    def __init__(self):
-        pass
+    def __init__(self, catalog):
+        self.catalog = catalog
 
     # of no use temporarily
-    def select_opt(self, keys, values, ops, index_dic):
-        pass
+    def check_opt(self, table, conditions):
+        for item in conditions:
+            index_name = self.catalog.is_index_key(table, getattr(self.catalog.tables[table].attributes[item[0]],'name'))
+            if item[1] != 5 and index_name != False:
+                return [item, index_name, getattr(self.catalog.tables[table].attributes[item[0]],'type'), 
+                getattr(self.catalog.tables[table].attributes[item[0]],'length')]
+        return None
 
 
 class API():
@@ -17,6 +22,7 @@ class API():
         self.buffer = buffer
         self.record = record
         self.index = index
+        self.optimizer = optimizer(catalog)
 
     def create_table(self, tbl_name, tbl_pky, tbl_attributes):
         # attr[0]: name     attr[1]: type
@@ -160,11 +166,7 @@ class API():
 
     def delete_record(self, table, conditions):
         '''update the record and the index'''
-        self.catalog.table_not_exists(table)
-        attrlist = []
-        for item in self.catalog.tables[table].attributes:
-            attrlist.append((item.name, item.type, item.length, item.uniqueness))
-        # conditions process
+        # process constraints
         conditions = [list(item) for item in conditions]
         for item in conditions:
             if item[1] == '<':
@@ -186,7 +188,14 @@ class API():
                 item[2] = int(item[2])
             elif self.catalog.tables[table].attributes[idx].type == 'f':
                 item[2] = float(item[2]) 
+            else :
+                item[2] = item[2][1:-1]
+                item[2] = item[2].encode('utf-8')
             item[0] = idx
+        self.catalog.table_not_exists(table)
+        attrlist = []
+        for item in self.catalog.tables[table].attributes:
+            attrlist.append((item.name, item.type, item.length, item.uniqueness))
         result_record, result_ptr = self.record.scan_all(table, conditions, attrlist)
         for bid, offset in result_ptr: 
             self.record.delete_with_index(table, bid, offset)
@@ -207,22 +216,8 @@ class API():
         print('Successfully delete')
 
     def select(self, table, cols, conditions):
-        # checke index
-        # for item in self.catalog.indices:
-        #     if (self.catalog.indices[item][0] == table):
-        #         flag = True
-        #         index = item
-        #         break;
-        #     else:
-        #         flag = False
-        # if an index can be made use of, use the index
-        # if flag:
-        #     result_record, result_ptr = self.record.scan_with_index(table, conditions, cols, domain)
-
-        # if not, scan all the record
-
-        # decode if need
         self.catalog.table_not_exists(table)
+                # decode if need
         attrlist = []
         col_index = []
         for item in self.catalog.tables[table].attributes:
@@ -266,8 +261,21 @@ class API():
                 item[2] = item[2][1:-1]
                 item[2] = item[2].encode('utf-8')
             item[0] = idx
-        (result_record, result_ptr) = self.record.scan_all(
-            table, conditions, attrlist)
+        # checke index
+        select_opt_Res = self.optimizer.check_opt(table, conditions)
+        if select_opt_Res != None:
+            if select_opt_Res[2][-1] == 's':
+                domain = self.index.search_domain(select_opt_Res[1], select_opt_Res[0][2].decode('utf-8'), 
+                select_opt_Res[0][1], select_opt_Res[2], select_opt_Res[3])
+            else:
+                domain = self.index.search_domain(select_opt_Res[1], select_opt_Res[0][2], 
+                select_opt_Res[0][1], select_opt_Res[2], select_opt_Res[3])
+            if domain != False:
+                (result_record, result_ptr) = self.record.scan_with_index(table, conditions, cols, domain)
+            else:
+                (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)     
+        else:
+            (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
         if attrlist != cols:
             for i in range(len(result_record)):
                 result_record[i] = list(result_record[i])

@@ -25,7 +25,7 @@ banner = \
 
 
 if __name__ == "__main__":
-    print(banner)
+    # print(banner)
     catalog = catalog_manager()
     buffer = bufferManager()
     record = record_manager(buffer)

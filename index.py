@@ -83,6 +83,10 @@ class index_manager():
                 cur_offset += length
                 if type[-1:] == 's': 
                     keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+            # print(keys)
+            # print(children)
+            # print(isleaf)
+            # print(num)
             # read one more child
             # for a leaf node, the last child is the pointer to the next leaf 
             children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
@@ -127,8 +131,7 @@ class index_manager():
             cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
             # empty
             if cur_block[:2] == b'': 
-                # print('empty')
-                return False
+                return None
             isleaf, num = struct.unpack('=?h', cur_block[:3])
             cur_offset = 3
             for i in range(num): 
@@ -139,6 +142,10 @@ class index_manager():
                 cur_offset += length
                 if type[-1:] == 's': 
                     keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+            # print(value)
+            # print(keys)
+            # print(children)
+            # print(isleaf)
             # read one more child
             # for a leaf node, the last child is the pointer to the next leaf 
             children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
@@ -147,86 +154,130 @@ class index_manager():
                 # go deeper
                 if value >= keys[num-1]: 
                     cur_bid = children[num][0]
+                    print(cur_bid)
+                    print(children[num][0])
                 elif value < keys[0]: 
+                    print(cur_bid)
+                    print(children[0][0])
+                    if cur_bid == children[0][0]:
+                        return False
                     cur_bid = children[0][0]
                 else: 
                     for i in range(num-1): 
                         if value >= keys[i] and value < keys[i+1]: 
                             cur_bid = children[i+1][0]
+                            
+                            print(cur_bid)
+                            print(children[i+1][0])
                             break
             else: 
                 # find the value and return its position
                 # the last child is the pointer
-                if value < keys[0] or value > keys[num]:
-                    return False
-                else: 
-                    if value in keys[:num]:
-                        res_bid, res_offset = children[keys.index(value)]
+                if value < keys[0]:
+                    if operate == 0 or operate == 1:
+                        cur_bid -= 1
+                        isleaf, num = struct.unpack('=?h', cur_block[:3])
+                        cur_offset = 3
+                        for i in range(num): 
+                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                            cur_offset += 4
+                            key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
+                            keys.append(key)
+                            cur_offset += length
+                            if type[-1:] == 's': 
+                                keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+                        children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))  
+                if value > keys[num - 1]:
+                    if operate == 2 or operate == 3:
+                        cur_bid += 1
+                        isleaf, num = struct.unpack('=?h', cur_block[:3])
+                        cur_offset = 3
+                        for i in range(num): 
+                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                            cur_offset += 4
+                            key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
+                            keys.append(key)
+                            cur_offset += length
+                            if type[-1:] == 's': 
+                                keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+                        children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                if isleaf == False or cur_block[:2] == b'':
+                    return None
+                if value in keys[:num]:
+                    res_bid, res_offset = children[keys.index(value)]
+                    index = keys.index(value)
+                else:
+                    for item in keys[:num]:
+                        if value < item:
+                            res_bid, res_offset = children[keys.index(item)]
+                            index = keys.index(item)
+                            break
+                    if res_offset == res_bid and res_bid == 0:
+                        res_bid, res_offset = children[num]
                         index = num
-                    else:
-                        for item in keys[:num]:
-                            if value > item:
-                                res_bid, res_offset = children[keys.index(item)]
-                                index = num
-                                break
-                    if operate == '<' or operate == '<=':
+                if operate == 0 or operate == 1:
+                    if index != 0:
                         for item in keys[:index - 1]:
                             result.append(children[keys.index(item)])
-                        if operate == '<=':
+                    if operate == 1 and value == children[index]:
                             result.append((res_bid, res_offset))
+                    cur_bid = cur_bid - 1
+                    keys = []
+                    children = []
+                    cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
+                    isleaf, num = struct.unpack('=?h', cur_block[:3])
+                    while isleaf:
+                        cur_offset = 3
+                        for i in range(num): 
+                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                            cur_offset += 4
+                            key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
+                            keys.append(key)
+                            cur_offset += length
+                            if type[-1:] == 's': 
+                                keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+                        children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                        for item in children[:num]:
+                            result.append(item)
                         cur_bid = cur_bid - 1
                         keys = []
                         children = []
+                        cur_offset = 0
                         cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
                         isleaf, num = struct.unpack('=?h', cur_block[:3])
-                        while isleaf:
-                            cur_offset = 3
-                            for i in range(num): 
-                                children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
-                                cur_offset += 4
-                                key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
-                                keys.append(key)
-                                cur_offset += length
-                                if type[-1:] == 's': 
-                                    keys[-1] = keys[-1].decode('utf-8').strip('\x00')
-                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
-                            for item in children:
-                                result.append(item)
-                            cur_bid = cur_bid - 1
-                            keys = []
-                            children = []
-                            cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
-                            isleaf, num = struct.unpack('=?h', cur_block[:3])
-                        return result   
-                    if operate == '>' or operate == '>=':
+                    return result   
+                if operate == 2 or operate == 3:
+                    if index != num - 1:
                         for item in keys[index + 1:]:
                             result.append(children[keys.index(item)])
-                        if operate == '>=':
-                            result.append((res_bid, res_offset))
+                    if operate == 3 and value == children[index]:
+                        result.append((res_bid, res_offset))
+                    cur_bid = cur_bid + 1
+                    keys = []
+                    children = []
+                    cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
+                    while cur_block[:2] != b'':
+                        isleaf, num = struct.unpack('=?h', cur_block[:3])
+                        cur_offset = 3
+                        for i in range(num): 
+                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                            cur_offset += 4
+                            key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
+                            keys.append(key)
+                            cur_offset += length
+                            if type[-1:] == 's': 
+                                keys[-1] = keys[-1].decode('utf-8').strip('\x00')
+                        children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
+                        for item in children[:num]:
+                            result.append(item)
                         cur_bid = cur_bid + 1
                         keys = []
                         children = []
                         cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
-                        while cur_block[:2] != b'':
-                            isleaf, num = struct.unpack('=?h', cur_block[:3])
-                            cur_offset = 3
-                            for i in range(num): 
-                                children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
-                                cur_offset += 4
-                                key, = struct.unpack('='+type, cur_block[cur_offset:cur_offset+length])
-                                keys.append(key)
-                                cur_offset += length
-                                if type[-1:] == 's': 
-                                    keys[-1] = keys[-1].decode('utf-8').strip('\x00')
-                            children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
-                            for item in children:
-                                result.append(item)
-                            cur_bid = cur_bid + 1
-                            keys = []
-                            children = []
-                            cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
-                        return result       
-
+                    return result       
+            keys = []
+            children = []
+            cur_offset = 0
     def __search_leaf(self, node, value): 
         # a leaf
         if node.is_leaf() is True: 
@@ -461,3 +512,23 @@ class index_manager():
 #     print(manager.search('tt', 'xsc', '10s', 10))
 #     print(manager.search('tt', 'xxx', '10s', 10))
 
+buffer_m = buffer.bufferManager()
+manager = index_manager(buffer_m) 
+#     # manager.drop_index_file('tobede')
+#     # index_name = 'test'
+#     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
+#     # addresses = [[40, 6], [17, 48], [6, 6], [16, 23], [37, 21], [39, 41], [23, 24], [19, 15], [24, 7], [11, 46], 
+#     #              [5, 24], [17, 3], [34, 22], [21, 8], [43, 44], [18, 40], [48, 12], [14, 47], [45, 8], [26, 15]]
+#     # manager.create_index(index_name, addresses, values, 4)
+# index_name = 'tt'
+# values = ['aaa', 'cde', 'xhice', 'xsc', 'hidcu', 'xhsayi', 'xui', 'chausi']
+# addresses = [[40, 6], [21, 8], [6, 6], [16, 23], [37, 21], [5, 24], [17, 3], [34, 22]]
+# # for item in values:
+# #     values[values.index(item)] = item.encode('utf-8')
+# # manager.create_index(index_name, addresses, values, 4)
+# type = '10s'
+# length = 10
+# # manager.save_Bplus(index_name, type, length)
+#     # print(manager.search('test', 196, 'i', 4))
+# print(manager.search('tt', 'xsc', '10s', 10))
+print(manager.search_domain('index_name', 'xu', '<', '10s', 10))

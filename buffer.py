@@ -244,9 +244,9 @@ class bufferManager():
 # content = file.read(block_size)
 # print(content)
 # file.close()
-testManager = bufferManager()
-res = testManager.read_block("students", 1, 10000)
-print(res[:2])
-print(res[:2] == b'')
+# testManager = bufferManager()
+# res = testManager.read_block("students", 1, 10000)
+# print(res[:2])
+# print(res[:2] == b'')
 
 
