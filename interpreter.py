@@ -430,6 +430,7 @@ def p_expression_start(t):
                     | exp_drop_index
                     | exp_delete
                     | exp_execfile
+                    | exp_show
                     | exp_help'''
 
 
