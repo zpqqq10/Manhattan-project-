@@ -77,6 +77,8 @@ t_EXECFILE = r'EXECFILE|execfile'
 t_HELP = r'HELP|help'
 t_SHOW = r'SHOW|show'
 # ''' '"[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'| '''
+
+
 def t_COLUMN(t):
     # r'[a-zA-Z0-9/_.-]+'
     r''' "[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'|[a-zA-Z0-9/_.-]+ '''
@@ -124,9 +126,9 @@ def t_COLUMN(t):
         t.type = 'INDEX'
     if t.value in ['EXECFILE', 'execfile']:
         t.type = 'EXECFILE'
-    if t.value in ['HELP','help']:
+    if t.value in ['HELP', 'help']:
         t.type = 'HELP'
-    if t.value in ['SHOW','show']:
+    if t.value in ['SHOW', 'show']:
         t.type = 'SHOW'
     return t
 
@@ -170,7 +172,7 @@ class Stack(object):
     def __str__(self):
         print(self._stack)
 
-        return 
+        return
 
     def __getitem__(self, item):
         return self._stack[item]
@@ -288,8 +290,8 @@ class Create(object):
             start = time.time()
             # print("Create Index on attribute ", self.attr, " of ",
             #       self.table, ", named as ", self.index)
-            api.retrieve_index(self.index, self.attr, self.table)
-            api.create_index()
+            api.create_index(self.index, self.table, self.attr)
+            print("Successfully create index '%s'" % self.index)
             end = time.time()
             print('Duration: %fs' % (end - start))
         else:
@@ -297,13 +299,13 @@ class Create(object):
             start = time.time()
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
-                raise Exception('SYNTAX Error: Invalid primary key! Check if it is in the attributes list.')
+                raise Exception(
+                    'SYNTAX Error: Invalid primary key! Check if it is in the attributes list.')
                 # print("error PRIMARY KEY")
                 # return
             # print("create : ", self.values, "table : ",
             #       self.table, "primary : ", self.primary)
-            api.retrieve_table(self.table, self.primary, self.values)
-            api.create_table()
+            api.create_table(self.table, self.primary, self.values)
             print("Successfully create table '%s'" % self.table)
             end = time.time()
             print('Duration: %fs' % (end - start))
@@ -343,23 +345,23 @@ class Insert(object):
                 end = time.time()
                 print('Duration: %fs' % (end - start))
             else:
-                raise Exception("SYNTAX Error: The number of input colomns is not equal to the number of input value.")
+                raise Exception(
+                    "SYNTAX Error: The number of input colomns is not equal to the number of input value.")
                 # print(" error columns and values not equal")
                 # return
         else:
             if len(catalog.tables[self.table].attributes) != len(self._stack):
                 raise Exception("INVALID VALUE Error: Input values len {0} not equal table columes len {1}".
-                      format(len(self._stack), len(catalog.tables[self.table].attributes)))
+                                format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 # return
             start = time.time()
             self._stack._stack.reverse()
-
             api.insert_record(self.table, self._stack._stack)
+            print('Successfully insert')
             end = time.time()
             print('Duration: %fs' % (end - start))
             # print("Insert without columns: values:", self._stack)
             # print(self.table)
-
 
 
 class Drop(object):
@@ -379,8 +381,7 @@ class Drop(object):
         global catalog
         if self.table and self.table in catalog.tables.keys():
             start = time.time()
-            api.retrieve_table(self.table)
-            api.drop_table()
+            api.drop_table(self.table)
             print("Successfully drop table '%s'" % self.table)
             end = time.time()
             print('Duration: %fs' % (end - start))
@@ -396,7 +397,7 @@ class Help(object):
     def __init__(self):
         pass
 
-    def action(self): 
+    def action(self):
         print('----------------Minisql------------------')
         print('-----Developed by Xu, Bao and Cheung-----')
         print('Support: ')
@@ -409,7 +410,7 @@ class Help(object):
         print('- select from a table')
         print('- execute instructions in a file')
         print('- enter "exit" or "quit" to exit Minisql')
-        
+
 
 def p_statement_expr(t):
     '''expressions : expression
@@ -497,7 +498,8 @@ def p_expression_create_table(t):
     current_action = Create()
     if not current_action.set_table(t[3]):
         reset_action()
-        print("INVALID IDENTIFIER Error: {0} table already exists".format(t[3]))
+        print(
+            "INVALID IDENTIFIER Error: {0} table already exists".format(t[3]))
         return
     # 处理参数
     current_action.skip = False
@@ -515,7 +517,8 @@ def p_expression_create_index(t):
         reset_action()
         return
     if not current_action.set_index(t[3]):
-        print('INVALID IDENTIFIER Error: {0} index already exists'.format(t[3]))
+        print(
+            'INVALID IDENTIFIER Error: {0} index already exists'.format(t[3]))
         reset_action()
         return
     if not current_action.set_attr(t[7]):
@@ -580,21 +583,28 @@ def p_expression_columns(t):
     '''columns : COLUMN
                | COLUMN COMMA columns'''
     stack.append(t[1])
+
+
 def p_expression_show(t):
     ''' exp_show : SHOW END '''
     api.show()
+
 
 def p_expression_execfile(t):
     '''exp_execfile : EXECFILE COLUMN END'''
     file_exec(t[2])
 
+
 def p_expression_help(t):
     ''' exp_help : HELP END'''
     global current_action
     current_action = Help()
+
+
 def p_error(p):
     if p:
-        print("SYNTAX Error: You have an error in your SQL syntax at {0}".format(p.value))
+        print(
+            "SYNTAX Error: You have an error in your SQL syntax at {0}".format(p.value))
     else:
         print("SYNTAX Error: You have an error in your SQL syntax at EOF")
 
