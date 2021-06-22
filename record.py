@@ -1,6 +1,7 @@
 import struct
 import os
 import sys
+from typing import Awaitable
 from buffer import bufferManager,bufferBlock
 from functools import reduce
 
@@ -60,6 +61,7 @@ class record_manager:
         self.buffer_manager.write(tbl_name,0,bid,off,free_list,6)
         bytes = struct.pack("=?hh?", False, bid, off >> 3, False)
         self.buffer_manager.write(tbl_name,0,0,0,bytes,6)
+
     """
     tbl_name        : the name of the table
     attr            : the list of the attribute tuple
