@@ -645,6 +645,8 @@ def p_error(p):
 
 
 def interpreter(data):
+    if data.split(' ')[0] not in ['execfile','EXECFILE']:
+        data = data.lower()
     yacc.yacc()
     yacc.parse(data)
 
