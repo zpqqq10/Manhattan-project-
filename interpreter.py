@@ -15,7 +15,7 @@ tokens = (
     'TABLE',
     'CREATE',
     'INSERT',
-    # 'UPDATE',
+    'UPDATE',
     'INTO',
     'VALUES',
     'SELECT',
@@ -50,7 +50,7 @@ t_RGPARENTH = r'\)'
 t_SELECT = r'SELECT|select'
 t_CREATE = r'CREATE|create'
 t_INSERT = r'INSERT|insert'
-# t_UPDATE = r'UPDATE|update'
+t_UPDATE = r'UPDATE|update'
 t_INTO = r'INTO|into'
 t_VALUES = r'VALUES|values'
 t_WHERE = r'WHERE|where'
@@ -92,8 +92,8 @@ def t_COLUMN(t):
         t.type = 'INTO'
     if t.value in ['VALUES', 'values']:
         t.type = 'VALUES'
-    # if t.value in ['UPDATE', 'update']:
-    #     t.type = 'UPDATE'
+    if t.value in ['UPDATE', 'update']:
+        t.type = 'UPDATE'
     if t.value in ['SET', 'set']:
         t.type = 'SET'
     if t.value in ['WHERE', 'where']:
@@ -426,7 +426,8 @@ def p_expression_start(t):
                     | exp_drop_index
                     | exp_delete
                     | exp_execfile
-                    | exp_help'''
+                    | exp_help
+                    | exp_show'''
 
 
 def p_expression_exit(t):
