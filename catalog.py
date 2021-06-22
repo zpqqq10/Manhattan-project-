@@ -123,25 +123,25 @@ class catalog_manager:
         #     if name == tbl_name:
         #         raise Exception("Table '%s' exists" % name)
         if name in self.tables.keys():
-            raise Exception("Table '%s' exists" % name)
+            raise Exception("INVALID IDENTIFIER: Table '%s' exists" % name)
 
     # raise an exception if the table does not exist
 
     def table_not_exists(self, name):
         if name not in self.tables.keys():
-            raise Exception("Table '%s' doesn't exist" % name)
+            raise Exception("INVALID IDENTIFIER: Table '%s' doesn't exist" % name)
 
     # raise an exception if the index exists
 
     def index_exists(self, name):
         if name in self.indices.keys():
-            raise Exception("Index '%s' exists" % name)
+            raise Exception("INVALID IDENTIFIER: Index '%s' exists" % name)
 
     # raise an exception if the index does not exist
 
     def index_not_exists(self, name):
         if name not in self.indices.keys():
-            raise Exception("Index '%s' doesn't exist" % name)
+            raise Exception("INVALID IDENTIFIER: Index '%s' doesn't exist" % name)
 
     # raise an exception if the key does not exist in the table
 
@@ -150,7 +150,7 @@ class catalog_manager:
         for attr in self.tables[tbl_name].attributes:
             if key == attr.name:
                 return
-        raise Exception("Key '%s' doesn't exist in table '%s'" %
+        raise Exception("INVALID IDENTIFIER: Key '%s' doesn't exist in table '%s'" %
                         (key, tbl_name))
 
     # raise an exception if the key is not unique
@@ -159,7 +159,7 @@ class catalog_manager:
         self.table_not_exists(tbl_name)
         for attr in self.tables[tbl_name].attributes:
             if key == attr.name and attr.uniqueness is False:
-                raise Exception("The key '%s' is not unique" % key)
+                raise Exception("INVALID ATTR FOR INDEX: The key '%s' is not unique" % key)
 
     def is_index_key(self, tbl_name, key):
         self.table_not_exists(tbl_name)

@@ -297,8 +297,9 @@ class Create(object):
             start = time.time()
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
-                print("error PRIMARY KEY")
-                return
+                raise Exception('SYNTAX Error: Invalid primary key! Check if it is in the attributes list.')
+                # print("error PRIMARY KEY")
+                # return
             # print("create : ", self.values, "table : ",
             #       self.table, "primary : ", self.primary)
             api.retrieve_table(self.table, self.primary, self.values)
@@ -331,8 +332,9 @@ class Insert(object):
                 start = time.time()
                 index = int(len(self._stack) / 2)
                 if index != len(catalog.tables[self.table].attributes):
-                    print("error default columns")
-                    return
+                    raise Exception('SYNTAX Error: Invalid default columns.')
+                    # print("error default columns")
+                    # return
                 attrs = self._stack[:index]
                 values = self._stack[index:]
                 print("Insert with columns: attributes:",
@@ -341,13 +343,14 @@ class Insert(object):
                 end = time.time()
                 print('Duration: %fs' % (end - start))
             else:
-                print(" error columns and values not equal")
-                return
+                raise Exception("SYNTAX Error: The number of input colomns is not equal to the number of input value.")
+                # print(" error columns and values not equal")
+                # return
         else:
             if len(catalog.tables[self.table].attributes) != len(self._stack):
-                print("input values len {0} not equal table columes len {1}".
+                raise Exception("INVALID VALUE Error: Input values len {0} not equal table columes len {1}".
                       format(len(self._stack), len(catalog.tables[self.table].attributes)))
-                return
+                # return
             start = time.time()
             self._stack._stack.reverse()
 
@@ -442,7 +445,7 @@ def p_expression_drop_table(t):
     global current_action
     current_action = Drop()
     if not current_action.set_table(t[3]):
-        print("{0} table not exists".format(t[3]))
+        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
         return
 
@@ -452,7 +455,7 @@ def p_expression_drop_index(t):
     global current_action
     current_action = Drop()
     if not current_action.set_index(t[3]):
-        print("{0} index not exists".format(t[3]))
+        print("INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
         reset_action()
         return
 
@@ -463,7 +466,7 @@ def p_expression_delete(t):
     global current_action
     current_action = Delete()
     if not current_action.set_table(t[3]):
-        print("{0} table not exists".format(t[3]))
+        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
         return
     if t[4] == "where":
@@ -478,7 +481,7 @@ def p_expression_select(t):
     global current_action
     current_action = Select()
     if not current_action.set_table(t[4]):
-        print("{0} table not exists".format(t[4]))
+        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[4]))
         reset_action()
         return
     if not t[2]:
@@ -493,7 +496,7 @@ def p_expression_create_table(t):
     current_action = Create()
     if not current_action.set_table(t[3]):
         reset_action()
-        print("{0} table already exists".format(t[3]))
+        print("INVALID IDENTIFIER Error: {0} table already exists".format(t[3]))
         return
     # 处理参数
     current_action.skip = False
@@ -507,15 +510,15 @@ def p_expression_create_index(t):
     global current_action
     current_action = Create()
     if current_action.set_table(t[5]):
-        print("{0} table doesn't exist".format(t[5]))
+        print("INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[5]))
         reset_action()
         return
     if not current_action.set_index(t[3]):
-        print('{0} index already exists'.format(t[3]))
+        print('INVALID IDENTIFIER Error: {0} index already exists'.format(t[3]))
         reset_action()
         return
     if not current_action.set_attr(t[7]):
-        print("{0} attr doesn't exists".format(t[7]))
+        print("INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
         reset_action()
         return
     current_action.is_Index = True
@@ -551,7 +554,7 @@ def p_expression_insert(t):
     global current_action
     current_action = Insert()
     if current_action.set_table(t[3]):
-        print("{0} table not exists".format(t[3]))
+        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
         return
     # 处理insert的参数
@@ -590,9 +593,9 @@ def p_expression_help(t):
     current_action = Help()
 def p_error(p):
     if p:
-        print("Syntax error at {0}".format(p.value))
+        print("SYNTAX Error: You have an error in your SQL syntax at {0}".format(p.value))
     else:
-        print("Syntax error at EOF")
+        print("SYNTAX Error: You have an error in your SQL syntax at EOF")
 
 
 def interpreter(data):

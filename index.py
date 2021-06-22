@@ -38,7 +38,7 @@ class Node():
         if self.is_empty() or key<self.keys[0]: 
             return 0
         
-        # isnert at the last position
+        # insert at the last position
         length = len(self.keys)
         if key >= self.keys[length-1]: 
             return length
@@ -49,7 +49,7 @@ class Node():
                 if key >=self.keys[i] and key < self.keys[i+1]: 
                     return i+1
 
-        raise Exception('The key has no position to place')
+        raise Exception('SYSTEM ERROR: The storage is full. The key has no position to place')
 
 class index_manager():
     def __init__(self, buffer_manager):
