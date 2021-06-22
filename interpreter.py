@@ -25,7 +25,7 @@ tokens = (
     'FROM',
     'AND',
     'SET',
-    # 'EQUAL',
+    'EQUAL',
     'STAR',
     "END",
     "OP",
@@ -57,12 +57,12 @@ t_WHERE = r'WHERE|where'
 t_FROM = r'FROM|from'
 t_AND = r'AND|and'
 t_SET = r'SET|set'
-# t_EQUAL = r'\='
+t_EQUAL = r'='
 t_TABLE = r'TABLE|table'
 t_COMMA = r','
 t_STAR = r'\*'
 t_END = r';'
-t_OP = r'<>|>=|<=|=|<|>'
+t_OP = r'<>|>=|<=|<|>'
 t_TYPE = r'INT|FLOAT|int|float'
 t_CHAR = r'CHAR|char'
 t_EXIT = r'QUIT|quit|EXIT|exit'
@@ -299,6 +299,7 @@ class Create(object):
             start = time.time()
             attr = [item[0] for item in self.values]
             if self.primary not in attr:
+                reset_action()
                 raise Exception(
                     'SYNTAX Error: Invalid primary key! Check if it is in the attributes list.')
                 # print("error PRIMARY KEY")
@@ -334,6 +335,7 @@ class Insert(object):
                 start = time.time()
                 index = int(len(self._stack) / 2)
                 if index != len(catalog.tables[self.table].attributes):
+                    reset_action()
                     raise Exception('SYNTAX Error: Invalid default columns.')
                     # print("error default columns")
                     # return
@@ -345,12 +347,14 @@ class Insert(object):
                 end = time.time()
                 print('Duration: %fs' % (end - start))
             else:
+                reset_action()
                 raise Exception(
                     "SYNTAX Error: The number of input colomns is not equal to the number of input value.")
                 # print(" error columns and values not equal")
                 # return
         else:
             if len(catalog.tables[self.table].attributes) != len(self._stack):
+                reset_action()
                 raise Exception("INVALID VALUE Error: Input values len {0} not equal table columes len {1}".
                                 format(len(self._stack), len(catalog.tables[self.table].attributes)))
                 # return
@@ -363,7 +367,22 @@ class Insert(object):
             # print("Insert without columns: values:", self._stack)
             # print(self.table)
 
-
+class Update(object):
+    def __init__(self):
+        self.table = None
+        self.conditions = []
+        self.fields = []
+    def set_table(self, table):
+        self.table = table
+        return table in catalog.tables.keys()
+    def add_conditions(self, condition_stack):
+        [self.conditions.append(v)
+         for v in condition_stack if v not in self.conditions]
+    def add_fields(self,stack):
+        [self.fields.append(v) for v in stack]
+    def action(self):
+        print(self.conditions)
+        print(self.fields)
 class Drop(object):
     def __init__(self):
         self.table = None
@@ -399,7 +418,7 @@ class Help(object):
 
     def action(self):
         print('----------------Minisql------------------')
-        print('-----Developed by Xu, Bao and Cheung-----')
+        print('-----Developed by Cheung, Bao and N7Utb-----')
         print('Support: ')
         print('- create a table')
         print('- create an index')
@@ -431,7 +450,8 @@ def p_expression_start(t):
                     | exp_delete
                     | exp_execfile
                     | exp_help
-                    | exp_show'''
+                    | exp_show
+                    | exp_update'''
 
 
 def p_expression_exit(t):
@@ -440,26 +460,38 @@ def p_expression_exit(t):
     print("Goodbye")
     # a close method in api,commit the buffer and so on
     exit(1)
-
-
+def p_expression_update(t):
+    ''' exp_update : UPDATE COLUMN SET exp_assign END
+                   | UPDATE COLUMN SET exp_assign WHERE exp_condition END'''
+    global current_action
+    current_action = Update()
+    if not current_action.set_table(t[2]):
+        reset_action()
+        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[2]))
+    if len({item[0] for item in stack._stack})!=len(stack._stack):
+        reset_action()
+        raise Exception("INVALID IDENTIFIER Error: update fields duplicate")
+    current_action.add_conditions(condition_stack)
+    current_action.add_fields(stack)
 def p_expression_drop_table(t):
     '''exp_drop_table : DROP TABLE COLUMN END'''
     global current_action
     current_action = Drop()
     if not current_action.set_table(t[3]):
-        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
 
-
+def p_expression_assign(t):
+    '''exp_assign : COLUMN EQUAL COLUMN
+                  | COLUMN EQUAL COLUMN COMMA exp_assign'''
+    stack.append((t[1],t[3]))
 def p_expression_drop_index(t):
     '''exp_drop_index : DROP INDEX COLUMN END'''
     global current_action
     current_action = Drop()
     if not current_action.set_index(t[3]):
-        print("INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
 
 
 def p_expression_delete(t):
@@ -468,9 +500,8 @@ def p_expression_delete(t):
     global current_action
     current_action = Delete()
     if not current_action.set_table(t[3]):
-        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
     if t[4] == "where":
         current_action.add_conditions(condition_stack)
 
@@ -482,10 +513,10 @@ def p_expression_select(t):
                     | SELECT columns FROM COLUMN WHERE exp_condition END'''
     global current_action
     current_action = Select()
+    
     if not current_action.set_table(t[4]):
-        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[4]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[4]))
     if not t[2]:
         current_action.add_columns(stack)
     if t[5] == "where":
@@ -498,9 +529,8 @@ def p_expression_create_table(t):
     current_action = Create()
     if not current_action.set_table(t[3]):
         reset_action()
-        print(
+        raise Exception(
             "INVALID IDENTIFIER Error: {0} table already exists".format(t[3]))
-        return
     # 处理参数
     current_action.skip = False
     current_action.is_Index = False
@@ -513,18 +543,18 @@ def p_expression_create_index(t):
     global current_action
     current_action = Create()
     if current_action.set_table(t[5]):
-        print("INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[5]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[5]))
+
     if not current_action.set_index(t[3]):
-        print(
+        reset_action()
+        raise Exception(
             'INVALID IDENTIFIER Error: {0} index already exists'.format(t[3]))
-        reset_action()
-        return
+        
     if not current_action.set_attr(t[7]):
-        print("INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
+
     current_action.is_Index = True
     # 处理参数
 
@@ -558,16 +588,18 @@ def p_expression_insert(t):
     global current_action
     current_action = Insert()
     if current_action.set_table(t[3]):
-        print("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
         reset_action()
-        return
+        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+
     # 处理insert的参数
     current_action.add_stack(stack)
 
 
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
-                     | COLUMN OP COLUMN AND exp_condition'''
+                     | COLUMN OP COLUMN AND exp_condition
+                     | COLUMN EQUAL COLUMN
+                     | COLUMN EQUAL COLUMN AND exp_condition'''
     # print("condition", t[1], t[2], t[3])
     condition_stack.append((t[1], t[2], t[3]))
 
@@ -600,7 +632,6 @@ def p_expression_help(t):
     global current_action
     current_action = Help()
 
-
 def p_error(p):
     if p:
         print(
@@ -630,10 +661,17 @@ def file_exec(file_name):
         data_list = f.readlines()
         print(">>>>>>>>>>>>>>>>> sql execute file start >>>>>>>>>>>>>>>>>\n")
         for data in data_list:
-            i = i+1
-            data = data.strip('\n')
-            print("sql execute file line {0}>".format(i)+data)
-            interpreter(data)
+            try:
+                i = i+1
+                data = data.strip('\n')
+                print("sql execute file line {0}>".format(i)+data)
+                interpreter(data)
+                print("")
+            except Exception as e:
+                print(e)
+                print("")
+        
+
         print("\n<<<<<<<<<<<<<<<<< sql execute file end <<<<<<<<<<<<<<<<<")
 
 

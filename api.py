@@ -262,6 +262,9 @@ class API():
                 item[2] = int(item[2])
             elif self.catalog.tables[table].attributes[idx].type == 'f':
                 item[2] = float(item[2]) 
+            else :
+                item[2] = item[2][1:-1]
+                item[2] = item[2].encode('utf-8')
             item[0] = idx
         (result_record, result_ptr) = self.record.scan_all(
             table, conditions, attrlist)
