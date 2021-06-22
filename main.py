@@ -37,6 +37,7 @@ if __name__ == "__main__":
     while True:
         try:
             data = input("sql>")
+            # data = data.upper()
             interpreter(data)
         except Exception as e:
             print(e)
