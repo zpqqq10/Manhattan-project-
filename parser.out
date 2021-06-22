@@ -1,5 +1,10 @@
 Created by PLY version 3.11 (http://www.dabeaz.com/ply)
 
+Unused terminals:
+
+    SET
+    UPDATE
+
 Grammar
 
 Rule 0     S' -> expressions
@@ -68,11 +73,13 @@ OP                   : 32 33
 PRIMARY              : 23
 RGPARENTH            : 23 23 24 28 30 34 35 35
 SELECT               : 19 20 21 22
+SET                  : 
 SHOW                 : 38
 STAR                 : 20 21
 TABLE                : 15 23
 TYPE                 : 27 29
 UNIQUE               : 29 30
+UPDATE               : 
 VALUES               : 34 35
 WHERE                : 18 21 22
 error                : 

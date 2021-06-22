@@ -24,7 +24,7 @@ tokens = (
     'WHERE',
     'FROM',
     'AND',
-    # 'SET',
+    'SET',
     # 'EQUAL',
     'STAR',
     "END",
@@ -56,7 +56,7 @@ t_VALUES = r'VALUES|values'
 t_WHERE = r'WHERE|where'
 t_FROM = r'FROM|from'
 t_AND = r'AND|and'
-# t_SET = r'SET|set'
+t_SET = r'SET|set'
 # t_EQUAL = r'\='
 t_TABLE = r'TABLE|table'
 t_COMMA = r','
