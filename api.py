@@ -17,24 +17,22 @@ class API():
         self.buffer = buffer
         self.record = record
         self.index = index
-        # table
-        #   name        primary key     attributes
-        # tbl_attributes may be used for catalog or insert
-        self.tbl_name = self.tbl_pky = self.tbl_attributes = None
-        # index
-        #   name        key of the index
-        self.idx_name = self.idx_key = self.idx_tbl = None
 
-    def create_table(self):
+    def create_table(self, tbl_name, tbl_pky, tbl_attributes):
         # attr[0]: name     attr[1]: type
         # attr[2]: length   attr[3]: uniqueness
-        '''process self.tbl_attributes into the format above at first
+        '''process tbl_attributes into the format above at first
         the process should be done after interpreter is complete'''
-        names = [attr[0] for attr in self.tbl_attributes]
+        tbl_attributes = [list(attr) for attr in tbl_attributes]
+        for attr in tbl_attributes: 
+            if tbl_pky == attr[0]: 
+                attr[3] = 1
+                break
+        names = [attr[0] for attr in tbl_attributes]
         checknames = set(names)
         if len(checknames) != len(names):
             raise Exception('INVALID VALUE ERROR: Duplicate names for attributes!')
-        for attr in self.tbl_attributes:
+        for attr in tbl_attributes:
             if '"' in attr[0] or "'" in attr[0]:
                 raise Exception('SYNTAX Error: Illegal syntax in attribute name')
             if attr[1] == 'int':
@@ -49,60 +47,58 @@ class API():
             elif attr[3] == 0:
                 attr[3] = False
         # duplicate is checked in this call
-        self.catalog.create_table(
-            self.tbl_name, self.tbl_pky, self.tbl_attributes)
-        self.catalog.create_index(self.tbl_name, self.tbl_name, self.tbl_pky)
-        self.record.create(self.tbl_name, self.tbl_attributes)
-        self.index.create_index_file(self.tbl_name)
+        self.catalog.create_table(tbl_name, tbl_pky, tbl_attributes)
+        self.catalog.create_index(tbl_name, tbl_name, tbl_pky)
+        self.record.create(tbl_name, tbl_attributes)
+        self.index.create_index_file(tbl_name)
 
         # print('tables now:', end='')
         # for tbl_name in self.catalog.tables.keys():
         #     print(' '+tbl_name, end='')
         # print()
 
-    def drop_table(self):
+    def drop_table(self, tbl_name):
         # existence is checked in this call
-        self.catalog.drop_table(self.tbl_name)
+        self.catalog.drop_table(tbl_name)
         # drop indices based on the table at first
         tmp_indices = []
         for index in self.catalog.indices.keys():
-            if self.catalog.indices[index][0] == self.tbl_name:
+            if self.catalog.indices[index][0] == tbl_name:
                 tmp_indices.append(index)
         for index in tmp_indices:
             self.drop_index(index)
         # drop the table at last
-        self.record.drop_record_file(self.tbl_name)
+        self.record.drop_record_file(tbl_name)
         self.catalog.save()
 
-    def create_index(self):
+    def create_index(self, idx_name, idx_tbl, idx_key):
         # duplicate, existence and uniqueness is checked in this call
-        self.catalog.create_index(self.idx_name, self.idx_tbl, self.idx_key)
+        self.catalog.create_index(idx_name, idx_tbl, idx_key)
         # attr[0]: name     attr[1]: type
         # attr[2]: length   attr[3]: uniqueness
-        '''process self.tbl_attributes into the format above at first
+        '''process attributes into the format above at first
         the process should be done after interpreter is complete'''
         key_idx = 0
         type = length = None
-        for i in range(len(self.catalog.tables[self.idx_tbl].attributes)):
+        for i in range(len(self.catalog.tables[idx_tbl].attributes)):
             # the index of the key in the table is i
-            if self.catalog.tables[self.idx_tbl].attributes[i].name == self.idx_key:
+            if self.catalog.tables[idx_tbl].attributes[i].name == idx_key:
                 key_idx = i
-                type = self.catalog.tables[self.idx_tbl].attributes[i].type
-                length = self.catalog.tables[self.idx_tbl].attributes[i].length
+                type = self.catalog.tables[idx_tbl].attributes[i].type
+                length = self.catalog.tables[idx_tbl].attributes[i].length
         # read all the records
         attrlist = []
-        for item in self.catalog.tables[self.idx_tbl].attributes:
+        for item in self.catalog.tables[idx_tbl].attributes:
             attrlist.append((item.name, item.type, item.length, item.uniqueness))
-        records, addresses = self.record.scan_all(
-            self.idx_tbl, [], attrlist)
+        records, addresses = self.record.scan_all(idx_tbl, [], attrlist)
         # extract the values
         values = [rec[key_idx] for rec in records]
         # order = (4096-2-1-2) // (length of key + 2) + 1
         order = (4096 - 5) // (length + 2) + 1
         # create the index
-        self.index.create_index(self.idx_name, addresses, values, order)
+        self.index.create_index(idx_name, addresses, values, order)
         # save the B plus tree as a file
-        self.index.save_Bplus(self.idx_name, type, length)
+        self.index.save_Bplus(idx_name, type, length)
 
     def drop_index(self, index_name):
         # existence is checked in this call
@@ -110,7 +106,7 @@ class API():
         self.index.drop_index_file(index_name)
         self.catalog.save()
 
-    def insert_record(self, table, value, attr=None):
+    def insert_record(self, table, value, attr=None, importflag = False):
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if attr is not None and (len(attr) != len(value)):
@@ -128,25 +124,13 @@ class API():
             elif item.type == 'f':
                 value[i] = float(value[i])
         '''call self.index.search() to check uniqueness'''
-        primary = self.catalog.tables[table].primary_key
         if attr is None:
-            primary_index = self.catalog.index_in_table(table, primary)
             attr = [[item.name, item.type, item.length, item.uniqueness]
                     for item in self.catalog.tables[table].attributes]
         else:
             pass
-        # primary_value = value[primary_index]
         tmp = []
         '''read a record here and check all the uniqueness'''
-        # primary_type = self.catalog.tables[table].attributes[primary_index].type
-        # if primary_type[0] == 'i' or primary_type[0] == 'f':
-        #     primary_length = 4
-        # else:
-        #     primary_length = int(primary_type[:-1])
-        # uniqRes = self.index.search(table, primary_value, primary_type, primary_length)
-        # if uniqRes : # Not unique
-        #     raise Exception("ERROR: the input data has duplicated Primary Key Value")
-        # else:
         check_record, check_ptr = self.record.scan_all(table, [], attr)
         for i in range(len(check_record)):
             for j, column in enumerate(self.catalog.tables[table].attributes):
@@ -160,19 +144,19 @@ class API():
                      for item in self.catalog.tables[table].attributes]
         self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
-        result_value, result_ptr = self.record.scan_all(table, [], attr)
-        tmp.clear()
-        for item in self.catalog.indices.keys():
-            if self.catalog.indices[item][0] == table:
-                idx = self.catalog.index_in_table(table, self.catalog.indices[item][1])
-                tmp.append([item, idx, self.catalog.tables[table].attributes[idx].type, self.catalog.tables[table].attributes[idx].length])
-        for index_name, i, type, length in tmp:
-            key_value = [item[i] for item in result_value]
-            order = (4096-2-1-2) // (length + 2) + 1
-            self.index.create_index(index_name, result_ptr, key_value, order)
-            self.index.save_Bplus(index_name, type, length)
-        print('1 row affected')
-        print('Successfully insert')
+        if importflag is False: 
+            result_value, result_ptr = self.record.scan_all(table, [], attr)
+            tmp.clear()
+            for item in self.catalog.indices.keys():
+                if self.catalog.indices[item][0] == table:
+                    idx = self.catalog.index_in_table(table, self.catalog.indices[item][1])
+                    tmp.append([item, idx, self.catalog.tables[table].attributes[idx].type, self.catalog.tables[table].attributes[idx].length])
+            for index_name, i, type, length in tmp:
+                key_value = [item[i] for item in result_value]
+                order = (4096-2-1-2) // (length + 2) + 1
+                self.index.create_index(index_name, result_ptr, key_value, order)
+                self.index.save_Bplus(index_name, type, length)
+            print('1 row affected')
 
     def delete_record(self, table, conditions):
         '''update the record and the index'''
@@ -323,24 +307,6 @@ class API():
             print('-' * (17 * len(cols) + 1))
         print("%d entrys in set" % len(result_record))
 
-    # retrive data from interpreter
-    def retrieve_table(self, _tbl_name, _tbl_pky=None, _attributes=None):
-        self.tbl_name = _tbl_name
-        self.tbl_pky = _tbl_pky
-        # transform tuples into lists here
-        if _attributes is not None:
-            self.tbl_attributes = [list(attr) for attr in _attributes]
-            for attr in self.tbl_attributes:
-                if self.tbl_pky == attr[0]:
-                    attr[3] = 1
-                    break
-            # print("api attr: ", self.tbl_attributes)
-
-    # retrive data from interpreter
-    def retrieve_index(self, _idx_name, _idx_key=None, _idx_tbl=None):
-        self.idx_name = _idx_name
-        self.idx_key = _idx_key
-        self.idx_tbl = _idx_tbl
 
     def exit(self):
         self.catalog.save()
