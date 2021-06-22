@@ -33,10 +33,10 @@ class API():
         names = [attr[0] for attr in self.tbl_attributes]
         checknames = set(names)
         if len(checknames) != len(names):
-            raise Exception('Error: duplicate names for attributes!')
+            raise Exception('INVALID VALUE ERROR: Duplicate names for attributes!')
         for attr in self.tbl_attributes:
             if '"' in attr[0] or "'" in attr[0]:
-                raise Exception('Error: illegal syntax in attribute name')
+                raise Exception('SYNTAX Error: Illegal syntax in attribute name')
             if attr[1] == 'int':
                 attr[1] = 'i'
             elif attr[1] == 'float':
@@ -114,9 +114,8 @@ class API():
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if attr is not None and (len(attr) != len(value)):
-            print(
-                "Error: The number of input values DOES NOT MATCH the number of input attributes")
-            return False
+            raise Exception(
+                "INVALID VALUE Error: The number of input values DOES NOT MATCH the number of input attributes")
         '''transform the input to the correct format'''
         # string process
         for i, item in enumerate(self.catalog.tables[table].attributes):
@@ -153,9 +152,9 @@ class API():
             for j, column in enumerate(self.catalog.tables[table].attributes):
                 if column.uniqueness is True:
                     if len(column.type) == 1 and check_record[i][j] == value[j]:
-                        raise Exception('Error: the uniqueness constraint')
+                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
                     elif len(column.type) != 1 and check_record[i][j].strip(b'\x00') == value[j]:
-                        raise Exception('Error: the uniqueness constraint')
+                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
         '''call self.record.insert()'''
         attribute = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
@@ -172,6 +171,7 @@ class API():
             order = (4096-2-1-2) // (length + 2) + 1
             self.index.create_index(index_name, result_ptr, key_value, order)
             self.index.save_Bplus(index_name, type, length)
+        print('1 row affected')
         print('Successfully insert')
 
     def delete_record(self, table, conditions):
@@ -196,7 +196,7 @@ class API():
             elif item[1] == '<>':
                 item[1] = 5
             else:
-                raise Exception('Error: illegal operator')
+                raise Exception('SYNTAX Error: There is illegal operator in your SQL syntax')
             idx = self.catalog.index_in_table(table, item[0])
             if self.catalog.tables[table].attributes[idx].type == 'i': 
                 item[2] = int(item[2])
@@ -272,7 +272,7 @@ class API():
             elif item[1] == '<>':
                 item[1] = 5
             else:
-                raise Exception('Error: illegal operator')
+                raise Exception('SYNTAX Error: There is illegal operator in your SQL syntax')
             idx = self.catalog.index_in_table(table, item[0])
             if self.catalog.tables[table].attributes[idx].type == 'i': 
                 item[2] = int(item[2])
@@ -321,7 +321,7 @@ class API():
                 print('|', output.center(15), end='')
             print('|')
             print('-' * (17 * len(cols) + 1))
-        print("Returned %d entrys" % len(result_record))
+        print("%d entrys in set" % len(result_record))
 
     # retrive data from interpreter
     def retrieve_table(self, _tbl_name, _tbl_pky=None, _attributes=None):
