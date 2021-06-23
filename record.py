@@ -145,7 +145,6 @@ class record_manager:
     return value    : a tuple of two result list: list of the record value and list of the position of record 
     """
     def scan_all(self, tbl_name, constraint, attr):
-        print(attr)
         bid = 0
         result_record = []
         result_ptr = []

@@ -205,7 +205,10 @@ class API():
             else:
                 domain = self.index.search_domain(delete_opt_Res[1], delete_opt_Res[0][2], 
                 delete_opt_Res[0][1], delete_opt_Res[2], delete_opt_Res[3])
-            if domain != False:
+            if domain == None:
+                result_record = []
+                result_ptr = []
+            elif domain != False:
                 (result_record, result_ptr) = self.record.scan_with_index(table, conditions, attrlist, domain)
             else:
                 (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)     
@@ -284,7 +287,10 @@ class API():
             else:
                 domain = self.index.search_domain(select_opt_Res[1], select_opt_Res[0][2], 
                 select_opt_Res[0][1], select_opt_Res[2], select_opt_Res[3])
-            if domain != False:
+            if domain == None:
+                result_record = []
+                result_ptr = []
+            elif domain != False:
                 (result_record, result_ptr) = self.record.scan_with_index(table, conditions, cols, domain)
             else:
                 (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)     
