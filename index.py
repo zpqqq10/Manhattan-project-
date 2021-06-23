@@ -131,7 +131,7 @@ class index_manager():
             cur_block = self.buffer_manager.read_block(name, 1, cur_bid)
             # empty
             if cur_block[:2] == b'': 
-                return None
+                return []
             isleaf, num = struct.unpack('=?h', cur_block[:3])
             cur_offset = 3
             for i in range(num): 
@@ -158,14 +158,12 @@ class index_manager():
                     # print(children[num][0])
                 elif value < keys[0]: 
                     if cur_bid == children[0][0]:
-                        return False
+                        return []
                     cur_bid = children[0][0]
                 else: 
                     for i in range(num-1): 
                         if value >= keys[i] and value < keys[i+1]: 
                             cur_bid = children[i+1][0]
-                            # print(cur_bid)
-                            # print(children[i+1][0])
                             break
             else: 
                 # find the value and return its position
@@ -199,7 +197,7 @@ class index_manager():
                                 keys[-1] = keys[-1].decode('utf-8').strip('\x00')
                         children.append(struct.unpack('=hh', cur_block[cur_offset:cur_offset+4]))
                 if cur_bid < 0 or isleaf == False or cur_block[:2] == b'':
-                    return None
+                    return []
                 if value in keys[:num]:
                     res_bid, res_offset = children[keys.index(value)]
                     index = keys.index(value)
@@ -216,12 +214,12 @@ class index_manager():
                     if value == keys[index]:
                         return [(res_bid, res_offset)]
                     else:
-                        return None
+                        return []
                 if operate == 0 or operate == 1:
                     if index != 0:
                         for item in keys[:index]:
                             result.append(children[keys.index(item)])
-                    if (operate == 1 and value == keys[index]) or value > keys[index]:
+                    if ((operate == 1 and value == keys[index]) or value > keys[index])  and (res_bid, res_offset) not in result:
                         result.append((res_bid, res_offset))
                     cur_bid = cur_bid - 1
                     keys = []
@@ -254,7 +252,7 @@ class index_manager():
                     if index != num - 1:
                         for item in keys[index:]:
                             result.append(children[keys.index(item)])
-                    if operate == 3 and value == keys[index]:
+                    if operate == 3 and value == keys[index] and (res_bid, res_offset) not in result:
                         result.append((res_bid, res_offset))
                     cur_bid = cur_bid + 1
                     keys = []
