@@ -317,12 +317,14 @@ class Create(object):
                     f = open(self.from_import,'r')
                     attr = f.readline()
                     attr = attr.strip().split(',')
-                    for i,j in self.values,attr:
-                        if i[0]!=j:
+                    for i in range(len(attr)):
+                        if self.values[i][0]!=attr[i]:
                             raise Exception("SYNTAX Error: Invalid ")
                     datas = f.readlines()
+                    
                     for item in datas:
                         j = item.split(',')
+                        print(j)
                         api.insert_record(self.table,j)
                 except:
                     api.drop_table(self.table)

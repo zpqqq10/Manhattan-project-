@@ -40,4 +40,5 @@ if __name__ == "__main__":
             # data = data.upper()
             interpreter(data)
         except Exception as e:
+            api.exit()
             print(e)
