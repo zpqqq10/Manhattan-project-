@@ -1,3 +1,4 @@
+import struct
 class optimizer(object):
     def __init__(self, catalog):
         self.catalog = catalog
@@ -109,6 +110,7 @@ class API():
         self.catalog.save()
 
     def insert_record(self, table, value, attr=None, import_flag = False):
+        self.catalog.table_not_exists(table)
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if attr is not None and (len(attr) != len(value)):
@@ -137,6 +139,8 @@ class API():
         # process constraints
         conditions = self.__condition_process(table, conditions)
         self.catalog.table_not_exists(table)
+        for item in conditions:
+                self.catalog.key_not_exists(table, item[0])
         attrlist = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
         # checke index
         delete_opt_Res = self.optimizer.check_opt(table, conditions)
@@ -163,6 +167,8 @@ class API():
 
     def select(self, table, cols, conditions):
         self.catalog.table_not_exists(table)
+        for item in conditions:
+                self.catalog.key_not_exists(table, item[0])
         attrlist = []
         col_index = []
         # set which columns to display
@@ -241,7 +247,43 @@ class API():
             print('-' * (17 * len(cols) + 1))
         print("%d entrys in set" % len(result_record))
 
-    def update(): 
+    def update(self, table, conditions, fields):
+        self.catalog.table_not_exists(table)
+        for item in fields:
+                self.catalog.key_not_exists(table, item[0])
+        for item in conditions:
+                self.catalog.key_not_exists(table, item[0])
+        # process constraints
+        conditions = self.__condition_process(table, conditions)
+        attrlist = [[item.name, item.type, item.length, item.uniqueness]
+                     for item in self.catalog.tables[table].attributes]
+        (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
+
+        # result_record = list(result_record)
+        # for record in result_record:
+        #     record = list(record)
+        #     for attr in attrlist:
+        #         if attr[1][-1] == 's':
+        #             record[attrlist.index(attr)] = record[attrlist.index(attr)].strip(b'\x00')
+        #     record = tuple(record)
+        for item in fields:
+            for i, attr in enumerate(self.catalog.tables[table].attributes):
+                if attr.name == item[0]:
+                    index = i
+                    type = attr.type
+            for record in result_record:
+                record = list(record)
+                if type[-1] == 's':
+                    record[index] = item[1][1:-1].encode('utf-8')
+                else:
+                    record[index] = item[1]
+                record = tuple(record)
+        for bid, offset in result_ptr: 
+            self.record.delete_with_index(table, bid, offset)
+        self.record.insert(table, attrlist, record)
+        self.__all_index_update(table, attrlist)
+        print("%d entrys affected" % len(result_record))
+        print('Successfully update')
         pass
 
     def exit(self):

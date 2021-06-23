@@ -417,8 +417,12 @@ class Update(object):
         [self.fields.append(v) for v in stack]
 
     def action(self):
-        print(self.conditions)
-        print(self.fields)
+        start = time.time()
+        api.update(self.table, self.conditions, self.fields)
+        end = time.time()
+        print('Duration: %fs' % (end - start))
+        # print(self.conditions)
+        # print(self.fields)
 
 
 class Drop(object):
