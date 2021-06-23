@@ -41,7 +41,8 @@ tokens = (
     "ON",
     "EXECFILE",
     "HELP",
-    "SHOW"
+    "SHOW",
+    "IMPORT"
 )
 
 
@@ -76,6 +77,7 @@ t_ON = r'ON|on'
 t_EXECFILE = r'EXECFILE|execfile'
 t_HELP = r'HELP|help'
 t_SHOW = r'SHOW|show'
+t_IMPORT = r'import|IMPORT'
 # ''' '"[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'| '''
 
 
@@ -130,6 +132,8 @@ def t_COLUMN(t):
         t.type = 'HELP'
     if t.value in ['SHOW', 'show']:
         t.type = 'SHOW'
+    if t.value in ['import','IMPORT']:
+        t.type = 'IMPORT'
     return t
 
 
@@ -260,7 +264,7 @@ class Create(object):
         self.attr = None
         self.is_Index = False
         self.skip = False
-
+        self.from_import = None
     def set_table(self, table):
         self.table = table
         return table not in catalog.tables.keys()
@@ -308,6 +312,21 @@ class Create(object):
             #       self.table, "primary : ", self.primary)
             api.create_table(self.table, self.primary, self.values)
             print("Successfully create table '%s'" % self.table)
+            if self.from_import:
+                try:
+                    f = open(self.from_import,'r')
+                    attr = f.readline()
+                    attr = attr.strip().split(',')
+                    for i,j in self.values,attr:
+                        if i[0]!=j:
+                            raise Exception("SYNTAX Error: Invalid ")
+                    datas = f.readlines()
+                    for item in datas:
+                        j = item.split(',')
+                        api.insert_record(self.table,j)
+                except:
+                    api.drop_table(self.table)
+                    raise
             end = time.time()
             print('Duration: %fs' % (end - start))
 
@@ -455,7 +474,8 @@ def p_expression_start(t):
                     | exp_execfile
                     | exp_help
                     | exp_show
-                    | exp_update'''
+                    | exp_update
+                    | exp_import'''
 
 
 def p_expression_exit(t):
@@ -538,6 +558,7 @@ def p_expression_create_table(t):
     # 处理参数
     current_action.skip = False
     current_action.is_Index = False
+    current_action.from_import = None
     current_action.set_primary(t[10])
     current_action.add_stack(stack)
 
@@ -558,8 +579,8 @@ def p_expression_create_index(t):
     if not current_action.set_attr(t[7]):
         reset_action()
         raise Exception("INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
-
-    current_action.is_Index = True
+    current_action.from_import = False
+    current_action.is_Index = None
     # 处理参数
 
 # def p_expression_key(t):
@@ -597,8 +618,20 @@ def p_expression_insert(t):
 
     # 处理insert的参数
     current_action.add_stack(stack)
-
-
+def p_expression_import(t):
+    '''exp_import : IMPORT COLUMN FROM COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END'''
+    global current_action
+    current_action = Create()
+    if not current_action.set_table(t[2]):
+        reset_action()
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table already exists".format(t[2]))
+    # 处理参数
+    current_action.skip = False
+    current_action.is_Index = False
+    current_action.from_import = t[4]
+    current_action.set_primary(t[11])
+    current_action.add_stack(stack)
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
                      | COLUMN OP COLUMN AND exp_condition
@@ -645,7 +678,7 @@ def p_error(p):
 
 
 def interpreter(data):
-    if data.split(' ')[0] not in ['execfile','EXECFILE']:
+    if data.split(' ')[0] not in ['execfile','EXECFILE','import','IMPORT']:
         data = data.lower()
     yacc.yacc()
     yacc.parse(data)

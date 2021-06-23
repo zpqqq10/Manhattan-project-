@@ -512,8 +512,8 @@ class index_manager():
 #     print(manager.search('tt', 'xsc', '10s', 10))
 #     print(manager.search('tt', 'xxx', '10s', 10))
 
-buffer_m = buffer.bufferManager()
-manager = index_manager(buffer_m) 
+# buffer_m = buffer.bufferManager()
+# manager = index_manager(buffer_m) 
 #     # manager.drop_index_file('tobede')
 #     # index_name = 'test'
 #     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
@@ -531,4 +531,4 @@ manager = index_manager(buffer_m)
 # # manager.save_Bplus(index_name, type, length)
 #     # print(manager.search('test', 196, 'i', 4))
 # print(manager.search('tt', 'xsc', '10s', 10))
-print(manager.search_domain('index_name', 'xu', '<', '10s', 10))
+# print(manager.search_domain('index_name', 'xu', '<', '10s', 10))
