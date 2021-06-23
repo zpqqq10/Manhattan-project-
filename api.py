@@ -1,3 +1,5 @@
+import codecs
+import csv
 import struct
 class optimizer(object):
     def __init__(self, catalog):
@@ -259,13 +261,6 @@ class API():
                      for item in self.catalog.tables[table].attributes]
         (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
 
-        # result_record = list(result_record)
-        # for record in result_record:
-        #     record = list(record)
-        #     for attr in attrlist:
-        #         if attr[1][-1] == 's':
-        #             record[attrlist.index(attr)] = record[attrlist.index(attr)].strip(b'\x00')
-        #     record = tuple(record)
         for item in fields:
             for i, attr in enumerate(self.catalog.tables[table].attributes):
                 if attr.name == item[0]:
@@ -284,7 +279,84 @@ class API():
         self.__all_index_update(table, attrlist)
         print("%d entrys affected" % len(result_record))
         print('Successfully update')
-        pass
+
+    def show_table(self):
+        info = ["attribute_name", "atrribute_type", "uniqueness"]
+        print('-' * (20 * len(info) + 1))
+        print('|', "Table Infomation".center((20 * len(info) - 2)), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
+        for table in self.catalog.tables:
+            tables = self.catalog.tables[table]
+            print('-' * (20 * len(info) + 1))
+            print('|', str(tables.table_name).center((20 * len(info) - 2)), end='')
+            print('|')
+            print('-' * (20 * len(info) + 1))
+            for info_item in info:
+                print('|', info_item.center(18), end='')
+            print('|')
+            print('-' * (20 * len(info) + 1))
+            for attr in tables.attributes:
+                print('|', str(attr.name).center(18), end='')
+                if attr.type == 'i':
+                    attr_type = 'int'
+                elif attr.type == 'f':
+                    attr_type = 'float'
+                else:
+                    attr_type = 'char(' + attr.type[:-1] + ')'
+                print('|', str(attr_type).center(18), end='')
+                if attr.name == tables.primary_key:
+                    print('|', "primary".center(18), end='')
+                else:
+                    print('|', str(attr.uniqueness).center(18), end='')
+                print('|')
+                print('-' * (20 * len(info) + 1))
+
+    def show_index(self):
+        info = ["index_name", "table_name", "attribute_name"]
+        print('-' * (20 * len(info) + 1))
+        print('|', "Index Infomation".center((20 * len(info) - 2)), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
+        for info_item in info:
+            print('|', info_item.center(18), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
+        for index in self.catalog.indices:
+            index_item = self.catalog.indices[index]
+            print('|', str(index).center(18), end='')
+            print('|', str(index_item[0]).center(18), end='')
+            print('|', str(index_item[1]).center(18), end='')
+            print('|')
+            print('-' * (20 * len(info) + 1))
+
+    def output(self, table, file_name):
+        path = "./test/test_data/"
+        post = ".csv"
+        attrlist = [[item.name, item.type, item.length, item.uniqueness]
+                     for item in self.catalog.tables[table].attributes]
+        (result_record, result_ptr) = self.record.scan_all(table, [], attrlist)
+        process_data = []
+        result_record = list(result_record)
+        for record in result_record:
+            record = list(record)
+            for attr in attrlist:
+                if attr[1][-1] == 's':
+                    record[attrlist.index(attr)] = "'" + record[attrlist.index(attr)].strip(b'\x00').decode('utf-8') + "'"
+                elif attr[1] == 'f':
+                    record[attrlist.index(attr)] = round(record[attrlist.index(attr)], 4)
+            record = tuple(record)
+            process_data.append(record)
+        f = codecs.open(path + file_name + post,'w', 'utf-8')
+        writer = csv.writer(f)
+        attr_name = []
+        for attr in attrlist:
+            attr_name.append(attr[0])
+        writer.writerow(attr_name)
+        for record in process_data:
+            writer.writerow(record)
+        f.close()
+        print("Succesfully Output, you can find the file at: " + path + file_name + post)
 
     def exit(self):
         self.catalog.save()
