@@ -133,7 +133,7 @@ def t_COLUMN(t):
         t.type = 'HELP'
     if t.value in ['SHOW', 'show']:
         t.type = 'SHOW'
-    if t.value in ['import','IMPORT']:
+    if t.value in ['import', 'IMPORT']:
         t.type = 'IMPORT'
     return t
 
@@ -266,6 +266,7 @@ class Create(object):
         self.is_Index = False
         self.skip = False
         self.from_import = None
+
     def set_table(self, table):
         self.table = table
         return table not in catalog.tables.keys()
@@ -315,17 +316,24 @@ class Create(object):
             print("Successfully create table '%s'" % self.table)
             if self.from_import:
                 try:
-                    f = open(self.from_import,'r')
+                    f = open(self.from_import, 'r')
                     attr = f.readline()
                     attr = attr.strip().split(',')
                     for i in range(len(attr)):
-                        if self.values[i][0]!=attr[i]:
-                            raise Exception("SYNTAX Error: Invalid ")
+                        if self.values[i][0] != attr[i]:
+                            raise Exception("SYNTAX Error: Invalid attribute name %s"%self.values[i][0])
                     datas = f.readlines()
-                    
+                    f.close()
+
                     for item in datas:
-                        j = item.split(',')
-                        api.insert_record(self.table,j)
+                        if item == datas[-1]: 
+                            j = item.split(',')
+                            api.insert_record(self.table, j)
+                        else : 
+                            j = item.split(',')
+                            j[-1] = j[-1].strip('\n')
+                            api.insert_record(self.table, j, import_flag = True)
+                    print('%d rows affected'%len(datas))
 
                 except:
                     api.drop_table(self.table)
@@ -383,28 +391,36 @@ class Insert(object):
             start = time.time()
             self._stack._stack.reverse()
             api.insert_record(self.table, self._stack._stack)
+            print('1 row affected')
             print('Successfully insert')
             end = time.time()
             print('Duration: %fs' % (end - start))
             # print("Insert without columns: values:", self._stack)
             # print(self.table)
 
+
 class Update(object):
     def __init__(self):
         self.table = None
         self.conditions = []
         self.fields = []
+
     def set_table(self, table):
         self.table = table
         return table in catalog.tables.keys()
+
     def add_conditions(self, condition_stack):
         [self.conditions.append(v)
          for v in condition_stack if v not in self.conditions]
-    def add_fields(self,stack):
+
+    def add_fields(self, stack):
         [self.fields.append(v) for v in stack]
+
     def action(self):
         print(self.conditions)
         print(self.fields)
+
+
 class Drop(object):
     def __init__(self):
         self.table = None
@@ -487,6 +503,8 @@ def p_expression_exit(t):
     print("Goodbye")
     # a close method in api,commit the buffer and so on
     exit(1)
+
+
 def p_expression_update(t):
     ''' exp_update : UPDATE COLUMN SET exp_assign END
                    | UPDATE COLUMN SET exp_assign WHERE exp_condition END'''
@@ -494,31 +512,39 @@ def p_expression_update(t):
     current_action = Update()
     if not current_action.set_table(t[2]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[2]))
-    if len({item[0] for item in stack._stack})!=len(stack._stack):
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[2]))
+    if len({item[0] for item in stack._stack}) != len(stack._stack):
         reset_action()
         raise Exception("INVALID IDENTIFIER Error: update fields duplicate")
     current_action.add_conditions(condition_stack)
     current_action.add_fields(stack)
+
+
 def p_expression_drop_table(t):
     '''exp_drop_table : DROP TABLE COLUMN END'''
     global current_action
     current_action = Drop()
     if not current_action.set_table(t[3]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+
 
 def p_expression_assign(t):
     '''exp_assign : COLUMN EQUAL COLUMN
                   | COLUMN EQUAL COLUMN COMMA exp_assign'''
-    stack.append((t[1],t[3]))
+    stack.append((t[1], t[3]))
+
+
 def p_expression_drop_index(t):
     '''exp_drop_index : DROP INDEX COLUMN END'''
     global current_action
     current_action = Drop()
     if not current_action.set_index(t[3]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
 
 
 def p_expression_delete(t):
@@ -528,7 +554,8 @@ def p_expression_delete(t):
     current_action = Delete()
     if not current_action.set_table(t[3]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
     if t[4] == "where":
         current_action.add_conditions(condition_stack)
 
@@ -540,10 +567,11 @@ def p_expression_select(t):
                     | SELECT columns FROM COLUMN WHERE exp_condition END'''
     global current_action
     current_action = Select()
-    
+
     if not current_action.set_table(t[4]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[4]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[4]))
     if not t[2]:
         current_action.add_columns(stack)
     if t[5] == "where":
@@ -572,16 +600,18 @@ def p_expression_create_index(t):
     current_action = Create()
     if current_action.set_table(t[5]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[5]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[5]))
 
     if not current_action.set_index(t[3]):
         reset_action()
         raise Exception(
             'INVALID IDENTIFIER Error: {0} index already exists'.format(t[3]))
-        
+
     if not current_action.set_attr(t[7]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
     current_action.from_import = False
     current_action.is_Index = None
     # 处理参数
@@ -617,10 +647,13 @@ def p_expression_insert(t):
     current_action = Insert()
     if current_action.set_table(t[3]):
         reset_action()
-        raise Exception("INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
 
     # 处理insert的参数
     current_action.add_stack(stack)
+
+
 def p_expression_import(t):
     '''exp_import : IMPORT COLUMN FROM COLUMN LFPARENTH exp_attributes COMMA PRIMARY KEY LFPARENTH COLUMN RGPARENTH RGPARENTH END'''
     global current_action
@@ -635,6 +668,8 @@ def p_expression_import(t):
     current_action.from_import = t[4]
     current_action.set_primary(t[11])
     current_action.add_stack(stack)
+
+
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
                      | COLUMN OP COLUMN AND exp_condition
@@ -672,6 +707,7 @@ def p_expression_help(t):
     global current_action
     current_action = Help()
 
+
 def p_error(p):
     if p:
         print(
@@ -681,7 +717,7 @@ def p_error(p):
 
 
 def interpreter(data):
-    if data.split(' ')[0] not in ['execfile','EXECFILE','import','IMPORT']:
+    if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT']:
         data = data.lower()
     yacc.yacc()
     yacc.parse(data)
@@ -713,7 +749,6 @@ def file_exec(file_name):
                 print(e)
                 # traceback.print_exc()
                 print("")
-        
 
         print("\n<<<<<<<<<<<<<<<<< sql execute file end <<<<<<<<<<<<<<<<<")
 

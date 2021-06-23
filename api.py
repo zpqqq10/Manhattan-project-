@@ -1,7 +1,3 @@
-import enum
-import struct
-
-
 class optimizer(object):
     def __init__(self, catalog):
         self.catalog = catalog
@@ -112,7 +108,7 @@ class API():
         self.index.drop_index_file(index_name)
         self.catalog.save()
 
-    def insert_record(self, table, value, attr=None, importflag = False):
+    def insert_record(self, table, value, attr=None, import_flag = False):
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if attr is not None and (len(attr) != len(value)):
@@ -120,82 +116,28 @@ class API():
                 "INVALID VALUE Error: The number of input values DOES NOT MATCH the number of input attributes")
         '''transform the input to the correct format'''
         # string process
-        for i, item in enumerate(self.catalog.tables[table].attributes):
-            if item.type[-1] == 's':
-                value[i] = value[i][1:-1]
-                value[i] = str(value[i])
-                value[i] = value[i].encode('utf-8')
-            elif item.type == 'i':
-                value[i] = int(value[i])
-            elif item.type == 'f':
-                value[i] = float(value[i])
-        '''call self.index.search() to check uniqueness'''
+        value = self.__string_process(table, value)
         if attr is None:
             attr = [[item.name, item.type, item.length, item.uniqueness]
                     for item in self.catalog.tables[table].attributes]
         else:
             pass
-        tmp = []
         '''read a record here and check all the uniqueness'''
-        check_record, check_ptr = self.record.scan_all(table, [], attr)
-        for i in range(len(check_record)):
-            for j, column in enumerate(self.catalog.tables[table].attributes):
-                if column.uniqueness is True:
-                    if len(column.type) == 1 and check_record[i][j] == value[j]:
-                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
-                    elif len(column.type) != 1 and check_record[i][j].strip(b'\x00') == value[j]:
-                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
+        self.__check_uniqueness(table, attr, value)
         '''call self.record.insert()'''
         attribute = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
         self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
-        if importflag is False: 
-            result_value, result_ptr = self.record.scan_all(table, [], attr)
-            tmp.clear()
-            for item in self.catalog.indices.keys():
-                if self.catalog.indices[item][0] == table:
-                    idx = self.catalog.index_in_table(table, self.catalog.indices[item][1])
-                    tmp.append([item, idx, self.catalog.tables[table].attributes[idx].type, self.catalog.tables[table].attributes[idx].length])
-            for index_name, i, type, length in tmp:
-                key_value = [item[i] for item in result_value]
-                order = (4096-2-1-2) // (length + 2) + 1
-                self.index.create_index(index_name, result_ptr, key_value, order)
-                self.index.save_Bplus(index_name, type, length)
-            print('1 row affected')
-
+        if import_flag is False: 
+            self.__all_index_update(table, attr)
+        
     def delete_record(self, table, conditions):
         '''update the record and the index'''
         # process constraints
-        conditions = [list(item) for item in conditions]
-        for item in conditions:
-            if item[1] == '<':
-                item[1] = 0
-            elif item[1] == '<=':
-                item[1] = 1
-            elif item[1] == '>':
-                item[1] = 2
-            elif item[1] == '>=':
-                item[1] = 3
-            elif item[1] == '=':
-                item[1] = 4
-            elif item[1] == '<>':
-                item[1] = 5
-            else:
-                raise Exception('SYNTAX Error: There is illegal operator in your SQL syntax')
-            idx = self.catalog.index_in_table(table, item[0])
-            if self.catalog.tables[table].attributes[idx].type == 'i': 
-                item[2] = int(item[2])
-            elif self.catalog.tables[table].attributes[idx].type == 'f':
-                item[2] = float(item[2]) 
-            else :
-                item[2] = item[2][1:-1]
-                item[2] = item[2].encode('utf-8')
-            item[0] = idx
+        conditions = self.__condition_process(table, conditions)
         self.catalog.table_not_exists(table)
-        attrlist = []
-        for item in self.catalog.tables[table].attributes:
-            attrlist.append((item.name, item.type, item.length, item.uniqueness))
+        attrlist = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
         # checke index
         delete_opt_Res = self.optimizer.check_opt(table, conditions)
         if delete_opt_Res != None:
@@ -215,26 +157,15 @@ class API():
         for bid, offset in result_ptr: 
             self.record.delete_with_index(table, bid, offset)
         # call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index
-        attr = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
-        result_value, result_ptr = self.record.scan_all(table, [], attr)
-        tmp = []
-        for item in self.catalog.indices.keys():
-            if self.catalog.indices[item][0] == table:
-                idx = self.catalog.index_in_table(table, self.catalog.indices[item][1])
-                tmp.append([item, idx, self.catalog.tables[table].attributes[idx].type, self.catalog.tables[table].attributes[idx].length])
-        for index_name, i, type, length in tmp:
-            key_value = [item[i] for item in result_value]
-            order = (4096-2-1-2) // (length + 2) + 1
-            self.index.create_index(index_name, result_ptr, key_value, order)
-            self.index.save_Bplus(index_name, type, length)
+        self.__all_index_update(table, attrlist)
         print("%d entrys affected" % len(result_record))
         print('Successfully delete')
 
     def select(self, table, cols, conditions):
         self.catalog.table_not_exists(table)
-                # decode if need
         attrlist = []
         col_index = []
+        # set which columns to display
         for item in self.catalog.tables[table].attributes:
             attrlist.append((item.name, item.type, item.length, item.uniqueness))
         if len(cols) == 0:
@@ -251,31 +182,7 @@ class API():
                         col_index.append(i)
                         break
         # process constraints
-        conditions = [list(item) for item in conditions]
-        for item in conditions:
-            if item[1] == '<':
-                item[1] = 0
-            elif item[1] == '<=':
-                item[1] = 1
-            elif item[1] == '>':
-                item[1] = 2
-            elif item[1] == '>=':
-                item[1] = 3
-            elif item[1] == '=':
-                item[1] = 4
-            elif item[1] == '<>':
-                item[1] = 5
-            else:
-                raise Exception('SYNTAX Error: There is illegal operator in your SQL syntax')
-            idx = self.catalog.index_in_table(table, item[0])
-            if self.catalog.tables[table].attributes[idx].type == 'i': 
-                item[2] = int(item[2])
-            elif self.catalog.tables[table].attributes[idx].type == 'f':
-                item[2] = float(item[2]) 
-            else :
-                item[2] = item[2][1:-1]
-                item[2] = item[2].encode('utf-8')
-            item[0] = idx
+        conditions = self.__condition_process(table, conditions)
         # checke index
         select_opt_Res = self.optimizer.check_opt(table, conditions)
         if select_opt_Res != None:
@@ -334,6 +241,8 @@ class API():
             print('-' * (17 * len(cols) + 1))
         print("%d entrys in set" % len(result_record))
 
+    def update(): 
+        pass
 
     def exit(self):
         self.catalog.save()
@@ -348,3 +257,68 @@ class API():
         for idx_name in self.catalog.indices.keys(): 
             print(' '+idx_name, end='')
         print()
+
+    
+    def __condition_process(self, table, conditions): 
+        conditions = [list(item) for item in conditions]
+        for item in conditions:
+            if item[1] == '<':
+                item[1] = 0
+            elif item[1] == '<=':
+                item[1] = 1
+            elif item[1] == '>':
+                item[1] = 2
+            elif item[1] == '>=':
+                item[1] = 3
+            elif item[1] == '=':
+                item[1] = 4
+            elif item[1] == '<>':
+                item[1] = 5
+            else:
+                raise Exception('SYNTAX Error: There is illegal operator in your SQL syntax')
+            idx = self.catalog.index_in_table(table, item[0])
+            if self.catalog.tables[table].attributes[idx].type == 'i': 
+                item[2] = int(item[2])
+            elif self.catalog.tables[table].attributes[idx].type == 'f':
+                item[2] = float(item[2]) 
+            else :
+                item[2] = item[2][1:-1]
+                item[2] = item[2].encode('utf-8')
+            item[0] = idx
+        return conditions
+
+    def __string_process(self, table, value): 
+        for i, item in enumerate(self.catalog.tables[table].attributes):
+            if item.type[-1] == 's':
+                value[i] = value[i][1:-1]
+                value[i] = str(value[i])
+                value[i] = value[i].encode('utf-8')
+            elif item.type == 'i':
+                value[i] = int(value[i])
+            elif item.type == 'f':
+                value[i] = float(value[i])
+        return value
+
+    def __check_uniqueness(self, table, attr, value): 
+        check_record, check_ptr = self.record.scan_all(table, [], attr)
+        for i in range(len(check_record)):
+            for j, column in enumerate(self.catalog.tables[table].attributes):
+                if column.uniqueness is True:
+                    if len(column.type) == 1 and check_record[i][j] == value[j]:
+                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
+                    elif len(column.type) != 1 and check_record[i][j].strip(b'\x00') == value[j]:
+                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
+
+
+    def __all_index_update(self, table, attr): 
+        result_value, result_ptr = self.record.scan_all(table, [], attr)
+        tmp = []
+        for item in self.catalog.indices.keys():
+            if self.catalog.indices[item][0] == table:
+                idx = self.catalog.index_in_table(table, self.catalog.indices[item][1])
+                tmp.append([item, idx, self.catalog.tables[table].attributes[idx].type, self.catalog.tables[table].attributes[idx].length])
+        for index_name, i, type, length in tmp:
+            key_value = [item[i] for item in result_value]
+            order = (4096-2-1-2) // (length + 2) + 1
+            self.index.create_index(index_name, result_ptr, key_value, order)
+            self.index.save_Bplus(index_name, type, length)
