@@ -4,6 +4,7 @@ import ply.yacc as yacc
 from catalog import catalog_manager, Table
 import collections
 import time
+import traceback
 # global variables for each manager
 catalog = None
 record = None
@@ -710,6 +711,7 @@ def file_exec(file_name):
                 print("")
             except Exception as e:
                 print(e)
+                traceback.print_exc()
                 print("")
         
 
