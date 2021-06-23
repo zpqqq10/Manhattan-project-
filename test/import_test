@@ -1,0 +1,6 @@
+import aaa from ./test/add.csv (id int,name char(10),gender char(1),primary key(id));
+insert into aaa values(3,'111','f');
+insert into aaa values(4,'111','f');
+select * from aaa where id = 8;
+select * from aaa where id <> 1;
+drop table aaa;

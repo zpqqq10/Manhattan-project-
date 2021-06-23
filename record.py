@@ -97,8 +97,6 @@ class record_manager:
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
     def check_record(self, record, attr, constraint):
-        if record[0] == False:
-            return False
         for item in constraint:
             if attr[item[0]][1][-1] == 's':
                 record_content = record[item[0]+1].strip(b'\x00')
@@ -145,7 +143,6 @@ class record_manager:
     return value    : a tuple of two result list: list of the record value and list of the position of record 
     """
     def scan_all(self, tbl_name, constraint, attr):
-        print(attr)
         bid = 0
         result_record = []
         result_ptr = []

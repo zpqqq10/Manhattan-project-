@@ -324,8 +324,8 @@ class Create(object):
                     
                     for item in datas:
                         j = item.split(',')
-                        print(j)
                         api.insert_record(self.table,j)
+
                 except:
                     api.drop_table(self.table)
                     raise
