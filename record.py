@@ -97,34 +97,40 @@ class record_manager:
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
     def check_record(self, record, attr, constraint):
+        if record[0] == False:
+            return False
         for item in constraint:
+            if attr[item[0]][1][-1] == 's':
+                record_content = record[item[0]+1].strip(b'\x00')
+            else:
+                record_content = record[item[0]+1]
             if item[1] == 0:
-                if record[item[0]+1] < item[2]:
+                if record_content < item[2]:
                     continue
                 else:
                     return False
             elif item[1] == 1:
-                if record[item[0]+1] <= item[2]:
+                if record_content <= item[2]:
                     continue
                 else:
                     return False
             elif item[1] == 2:
-                if record[item[0]+1] > item[2]:
+                if record_content > item[2]:
                     continue
                 else:
                     return False
             elif item[1] == 3:
-                if record[item[0]+1] >= item[2]:
+                if record_content >= item[2]:
                     continue
                 else:
                     return False
             elif item[1] == 4:
-                if record[item[0]+1] == item[2]:
+                if record_content == item[2]:
                     continue
                 else:
                     return False
             elif item[1] == 5:
-                if record[item[0]+1] != item[2]:
+                if record_content != item[2]:
                     continue
                 else:
                     return False
@@ -139,6 +145,7 @@ class record_manager:
     return value    : a tuple of two result list: list of the record value and list of the position of record 
     """
     def scan_all(self, tbl_name, constraint, attr):
+        print(attr)
         bid = 0
         result_record = []
         result_ptr = []
@@ -156,6 +163,7 @@ class record_manager:
             while idx + record_length_a * 8 <= block_len:
                 record = struct.unpack(
                     format, block_content[idx:idx+record_length_r])
+                # print(record)
                 if record[0] & self.check_record(record, attr, constraint):
                     result_record.append(record[1:])
                     result_ptr.append((bid, idx))

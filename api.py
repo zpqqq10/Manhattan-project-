@@ -196,7 +196,21 @@ class API():
         attrlist = []
         for item in self.catalog.tables[table].attributes:
             attrlist.append((item.name, item.type, item.length, item.uniqueness))
-        result_record, result_ptr = self.record.scan_all(table, conditions, attrlist)
+        # checke index
+        delete_opt_Res = self.optimizer.check_opt(table, conditions)
+        if delete_opt_Res != None:
+            if delete_opt_Res[2][-1] == 's':
+                domain = self.index.search_domain(delete_opt_Res[1], delete_opt_Res[0][2].decode('utf-8'), 
+                delete_opt_Res[0][1], delete_opt_Res[2], delete_opt_Res[3])
+            else:
+                domain = self.index.search_domain(delete_opt_Res[1], delete_opt_Res[0][2], 
+                delete_opt_Res[0][1], delete_opt_Res[2], delete_opt_Res[3])
+            if domain != False:
+                (result_record, result_ptr) = self.record.scan_with_index(table, conditions, attrlist, domain)
+            else:
+                (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)     
+        else:
+            (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
         for bid, offset in result_ptr: 
             self.record.delete_with_index(table, bid, offset)
         # call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index
