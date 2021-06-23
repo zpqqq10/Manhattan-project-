@@ -418,7 +418,7 @@ class Help(object):
 
     def action(self):
         print('----------------Minisql------------------')
-        print('-----Developed by Cheung, Bao and N7Utb-----')
+        print('-----Developed by Cheung, SoonWhy and N7Utb-----')
         print('Support: ')
         print('- create a table')
         print('- create an index')

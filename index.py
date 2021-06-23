@@ -154,11 +154,11 @@ class index_manager():
                 # go deeper
                 if value >= keys[num-1]: 
                     cur_bid = children[num][0]
-                    print(cur_bid)
-                    print(children[num][0])
+                    # print(cur_bid)
+                    # print(children[num][0])
                 elif value < keys[0]: 
-                    print(cur_bid)
-                    print(children[0][0])
+                    # print(cur_bid)
+                    # print(children[0][0])
                     if cur_bid == children[0][0]:
                         return False
                     cur_bid = children[0][0]
@@ -166,9 +166,8 @@ class index_manager():
                     for i in range(num-1): 
                         if value >= keys[i] and value < keys[i+1]: 
                             cur_bid = children[i+1][0]
-                            
-                            print(cur_bid)
-                            print(children[i+1][0])
+                            # print(cur_bid)
+                            # print(children[i+1][0])
                             break
             else: 
                 # find the value and return its position
@@ -215,12 +214,20 @@ class index_manager():
                     if res_offset == res_bid and res_bid == 0:
                         res_bid, res_offset = children[num]
                         index = num
+                if operate == 4:
+                    if value == keys[index]:
+                        return [(res_bid, res_offset)]
+                    else:
+                        return None
                 if operate == 0 or operate == 1:
                     if index != 0:
+                        print(index)
                         for item in keys[:index - 1]:
+                            print(keys.index(item))
                             result.append(children[keys.index(item)])
-                    if operate == 1 and value == children[index]:
-                            result.append((res_bid, res_offset))
+                            print("Here!")
+                    if operate == 1 and value == keys[index]:
+                        result.append((res_bid, res_offset))
                     cur_bid = cur_bid - 1
                     keys = []
                     children = []
@@ -250,7 +257,7 @@ class index_manager():
                     if index != num - 1:
                         for item in keys[index + 1:]:
                             result.append(children[keys.index(item)])
-                    if operate == 3 and value == children[index]:
+                    if operate == 3 and value == keys[index]:
                         result.append((res_bid, res_offset))
                     cur_bid = cur_bid + 1
                     keys = []
@@ -512,8 +519,8 @@ class index_manager():
 #     print(manager.search('tt', 'xsc', '10s', 10))
 #     print(manager.search('tt', 'xxx', '10s', 10))
 
-buffer_m = buffer.bufferManager()
-manager = index_manager(buffer_m) 
+# buffer_m = buffer.bufferManager()
+# manager = index_manager(buffer_m) 
 #     # manager.drop_index_file('tobede')
 #     # index_name = 'test'
 #     # values = [42, 151, 1, 1, 89, 196, 33, 61, 163, 139, 113, 24]
@@ -530,5 +537,5 @@ manager = index_manager(buffer_m)
 # length = 10
 # # manager.save_Bplus(index_name, type, length)
 #     # print(manager.search('test', 196, 'i', 4))
-# print(manager.search('tt', 'xsc', '10s', 10))
-print(manager.search_domain('index_name', 'xu', '<', '10s', 10))
+# # print(manager.search('tt', 'xsc', '10s', 10))
+# print(manager.search_domain('index_name', 'bdz', 4, '10s', 10))
