@@ -25,7 +25,7 @@ banner = \
 
 
 if __name__ == "__main__":
-    # print(banner)
+    print(banner)
     catalog = catalog_manager()
     buffer = bufferManager()
     record = record_manager(buffer)
@@ -40,4 +40,5 @@ if __name__ == "__main__":
             # data = data.upper()
             interpreter(data)
         except Exception as e:
+            api.exit()
             print(e)

@@ -97,8 +97,6 @@ class record_manager:
     # (attr_index0,ops,value)
     # ops (<,0) (<=,1) (>,2) (>=,3) (=,4) (<>, 5)
     def check_record(self, record, attr, constraint):
-        if record[0] == False:
-            return False
         for item in constraint:
             if attr[item[0]][1][-1] == 's':
                 record_content = record[item[0]+1].strip(b'\x00')
