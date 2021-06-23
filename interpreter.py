@@ -711,7 +711,7 @@ def file_exec(file_name):
                 print("")
             except Exception as e:
                 print(e)
-                traceback.print_exc()
+                # traceback.print_exc()
                 print("")
         
 
