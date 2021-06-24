@@ -1,0 +1,11 @@
+create table student2(id int, name char(12) unique, score float, primary key(id));
+execfile ./test/test_ta/instruction0.txt;
+execfile ./test/test_ta/instruction1.txt;
+execfile ./test/test_ta/instruction2.txt;
+execfile ./test/test_ta/instruction3.txt;
+execfile ./test/test_ta/instruction4.txt;
+execfile ./test/test_ta/instruction5.txt;
+execfile ./test/test_ta/instruction6.txt;
+execfile ./test/test_ta/instruction7.txt;
+execfile ./test/test_ta/instruction8.txt;
+execfile ./test/test_ta/instruction9.txt;

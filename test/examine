@@ -1,0 +1,7 @@
+select * from student2 where id = 1080100978; 
+select * from student2 where score = 50.5; 
+select * from student2 where name = 'name9000';
+select * from student2 where id <> 13888888; 
+create index idx on student2(name); 
+select * from student2 where name = 'name9000';
+drop index idx; 

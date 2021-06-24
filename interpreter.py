@@ -630,7 +630,7 @@ def p_expression_create_index(t):
         raise Exception(
             "INVALID IDENTIFIER Error: {0} attr doesn't exists".format(t[7]))
     current_action.from_import = False
-    current_action.is_Index = None
+    current_action.is_Index = True
     # 处理参数
 
 # def p_expression_key(t):
