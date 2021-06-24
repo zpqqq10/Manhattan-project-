@@ -1,6 +1,6 @@
 import codecs
 import csv
-import struct
+import time
 class optimizer(object):
     def __init__(self, catalog):
         self.catalog = catalog
@@ -203,6 +203,7 @@ class API():
         # checke index
         select_opt_Res = self.optimizer.check_opt(table, conditions)
         if select_opt_Res != None:
+            # start = time.time()
             if select_opt_Res[2][-1] == 's':
                 domain = self.index.search_domain(select_opt_Res[1], select_opt_Res[0][2].decode('utf-8'), 
                 select_opt_Res[0][1], select_opt_Res[2], select_opt_Res[3])
@@ -214,8 +215,13 @@ class API():
             else:
                 result_record = []
                 result_ptr = []
+            # end = time.time()
+            # print('exactly indexing: %fs' % (end - start))
         else:
+            # start = time.time()
             (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
+            # end = time.time()
+            # print('exactly scanning: %fs' % (end - start))
         if attrlist != cols:
             for i in range(len(result_record)):
                 result_record[i] = list(result_record[i])

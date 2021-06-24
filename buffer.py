@@ -3,7 +3,7 @@ import time
 import sys
 from typing import NewType
 block_size = 4096
-max_page = 16
+max_page = 32
 max_timestamp = 10000000000000  # 14位，比全部的毫秒级13位时间戳更大，置于minHeap的最后
 
 
@@ -14,7 +14,7 @@ class bufferBlock():
     modified: bool to identify
     """
 
-    def __init__(self, timestamp=max_timestamp, content=None, file=None, file_bid=None, modified=False):
+    def __init__(self, timestamp=0, content=None, file=None, file_bid=None, modified=False):
         self.timestamp = timestamp
         self.content = content
         self.file = file
