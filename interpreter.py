@@ -476,6 +476,10 @@ class Help(object):
         print('- delete records from a table')
         print('- select from a table')
         print('- execute instructions in a file')
+        print('- extra: use update instruction to update records in a table')
+        print('- extra: use show instruction to view information of tables or indices')
+        print('- extra: use import instruction to build a table with data from a csv file')
+        print('- extra: use export instruction to output a table into a csv file')
         print('- enter "exit" or "quit" to exit Minisql')
 
 
