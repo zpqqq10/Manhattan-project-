@@ -358,7 +358,7 @@ class API():
             writer.writerow(record)
         f.close()
         print("Succesfully Output, you can find the file at: " +file_path)
-
+    
     def exit(self):
         self.catalog.save()
 

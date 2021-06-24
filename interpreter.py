@@ -503,6 +503,7 @@ def p_expression_start(t):
                     | exp_help
                     | exp_show_table
                     | exp_show_index
+                    | exp_show
                     | exp_update
                     | exp_import
                     | exp_export'''
@@ -715,7 +716,9 @@ def p_expression_show_table(t):
             "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
     print(t[3])
     # api.show_table()
-
+def p_expression_show(t):
+    ''' exp_show : SHOW END '''
+    api.show()
 def p_expression_show_index(t):
     '''exp_show_index : SHOW INDEX COLUMN END '''
     if t[3] not in catalog.indices.keys():
