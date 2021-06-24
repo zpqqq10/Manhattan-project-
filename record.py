@@ -3,6 +3,7 @@ import os
 import sys
 from buffer import bufferManager, bufferBlock
 from functools import reduce
+import pathlib
 
 
 class record_manager:
@@ -196,7 +197,9 @@ class record_manager:
     # existence is checked outside record manager
     def drop_record_file(self, tbl_name):
         os.chdir(sys.path[0])
-        os.remove('./record/'+tbl_name+'.rec')
+        recpath = './record/'+tbl_name+'.rec'
+        if pathlib.Path(recpath).exists(): 
+            os.remove(recpath)
 
 
 if __name__ == "__main__":

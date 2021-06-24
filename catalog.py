@@ -24,6 +24,8 @@ class Attribute():
 
 class catalog_manager:
     def __init__(self):
+        # check catalog
+        self.__check_catalog()
         self.tables = {}  # dictionary for all tables
         self.indices = {}  # dictionary for all indices
         # build tables
@@ -200,6 +202,16 @@ class catalog_manager:
     def drop_index(self, index_name):
         self.index_not_exists(index_name)
         self.indices.pop(index_name)
+
+
+    def __check_catalog(self): 
+        os.chdir(sys.path[0])
+        if not pathlib.Path('./catalog').exists(): 
+            raise Exception('ERROR: The catalog folder is missing! The program exits and please rebuild the folder!')
+        if not pathlib.Path('./catalog/table_catalog.dat').exists(): 
+            raise Exception('ERROR: The file for tables "table_catalog.dat" is missing! The program exits and please rebuild the file!')
+        if not pathlib.Path('./catalog/index_catalog.dat').exists(): 
+            raise Exception('ERROR: The file for indices "index_catalog.dat" is missing! The program exits and please rebuild the file!')
 
     def check_record_files(self, table): 
         if len(self.tables) != 0: 

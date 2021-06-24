@@ -5,7 +5,7 @@ class optimizer(object):
     def __init__(self, catalog):
         self.catalog = catalog
 
-    # of no use temporarily
+    # optimize the plan of select
     def check_opt(self, table, conditions):
         for item in conditions:
             index_name = self.catalog.is_index_key(table, getattr(self.catalog.tables[table].attributes[item[0]],'name'))
@@ -33,6 +33,7 @@ class API():
             if tbl_pky == attr[0]: 
                 attr[3] = 1
                 break
+        # name for each column should be unique
         names = [attr[0] for attr in tbl_attributes]
         checknames = set(names)
         if len(checknames) != len(names):
@@ -57,10 +58,6 @@ class API():
         self.record.create(tbl_name, tbl_attributes)
         self.index.create_index_file(tbl_name)
 
-        # print('tables now:', end='')
-        # for tbl_name in self.catalog.tables.keys():
-        #     print(' '+tbl_name, end='')
-        # print()
 
     def drop_table(self, tbl_name):
         # existence is checked in this call
@@ -114,8 +111,8 @@ class API():
     def insert_record(self, table, value, attr=None, import_flag = False):
         self.catalog.table_not_exists(table)
         self.catalog.check_record_files(table)
-        for index in self.catalog.indice.keys(): 
-            if self.catalog.indice[index][0] == table: 
+        for index in self.catalog.indices.keys(): 
+            if self.catalog.indices[index][0] == table: 
                 self.catalog.check_index_files(index)
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
@@ -142,9 +139,14 @@ class API():
         
     def delete_record(self, table, conditions):
         '''update the record and the index'''
+        for condition in conditions: 
+            self.catalog.key_not_exists(table, condition[0])
+        self.catalog.check_record_files(table)
+        for index in self.catalog.indices.keys(): 
+            if self.catalog.indices[index][0] == table: 
+                self.catalog.check_index_files(index)
         # process constraints
         conditions = self.__condition_process(table, conditions)
-        self.catalog.table_not_exists(table)
         for item in conditions:
                 self.catalog.key_not_exists(table, item[0])
         attrlist = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
@@ -172,9 +174,12 @@ class API():
         print('Successfully delete')
 
     def select(self, table, cols, conditions):
-        self.catalog.table_not_exists(table)
         for item in conditions:
                 self.catalog.key_not_exists(table, item[0])
+        self.catalog.check_record_files(table)
+        for index in self.catalog.indices.keys(): 
+            if self.catalog.indices[index][0] == table: 
+                self.catalog.check_index_files(index)
         attrlist = []
         col_index = []
         # set which columns to display
@@ -225,6 +230,7 @@ class API():
             if type[-1] == 's':
                 stringFlag[cols.index(item)] = int(type[:-1])
         namelength = 0
+        # display
         print('-' * (17 * len(cols) + 1))
         for i in cols:
             namelength = namelength + len(i[0])
@@ -259,6 +265,10 @@ class API():
                 self.catalog.key_not_exists(table, item[0])
         for item in conditions:
                 self.catalog.key_not_exists(table, item[0])
+        self.catalog.check_record_files(table)
+        for index in self.catalog.indices.keys(): 
+            if self.catalog.indices[index][0] == table: 
+                self.catalog.check_index_files(index)
         # process constraints
         conditions = self.__condition_process(table, conditions)
         attrlist = [[item.name, item.type, item.length, item.uniqueness]
@@ -270,6 +280,7 @@ class API():
                 if attr.name == item[0]:
                     index = i
                     type = attr.type
+                    break
             for record in result_record:
                 record = list(record)
                 if type[-1] == 's':
@@ -333,6 +344,7 @@ class API():
         print('-' * (20 * len(info) + 1))
 
     def output(self, table, file_path):
+        self.catalog.check_record_files(table)
         # path = "./test/test_data/"
         # post = ".csv"
         attrlist = [[item.name, item.type, item.length, item.uniqueness]
@@ -362,20 +374,19 @@ class API():
         print("Succesfully Output, you can find the file at: " +file_path)
     
     def exit(self):
+        self.buffer.commitAll()
         self.catalog.save()
-
 
     def show(self): 
         print('tables:', end='')
         for tbl_name in self.catalog.tables.keys(): 
             print(' '+tbl_name, end='')
         print()
-        print('indice:', end='')
+        print('indices:', end='')
         for idx_name in self.catalog.indices.keys(): 
             print(' '+idx_name, end='')
         print()
 
-    
     def __condition_process(self, table, conditions): 
         conditions = [list(item) for item in conditions]
         for item in conditions:
@@ -409,6 +420,8 @@ class API():
             if item.type[-1] == 's':
                 value[i] = value[i][1:-1]
                 value[i] = str(value[i])
+                if len(value[i]) > item.length: 
+                    raise Exception("ERROR: Data too long for column '%s'"%item.name)
                 value[i] = value[i].encode('utf-8')
             elif item.type == 'i':
                 value[i] = int(value[i])
@@ -425,7 +438,6 @@ class API():
                         raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
                     elif len(column.type) != 1 and check_record[i][j].strip(b'\x00') == value[j]:
                         raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
-
 
     def __all_index_update(self, table, attr): 
         result_value, result_ptr = self.record.scan_all(table, [], attr)
