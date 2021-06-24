@@ -1,6 +1,7 @@
 import os
 import struct
 import sys
+import pathlib
 
 
 class Table():
@@ -40,7 +41,6 @@ class catalog_manager:
                 table_name, primary, num_attr)  # read a table
             for i in range(num_attr):
                 len_name, = struct.unpack('=i', file.read(4))
-
                 attr_name, = struct.unpack(
                     '='+str(len_name)+'s', file.read(len_name))
                 attr_name = attr_name.decode('utf-8')
@@ -71,6 +71,12 @@ class catalog_manager:
             key = key.decode('utf-8')
             self.indices[index] = [tbl, key]
         file.close()
+        # check existence
+        for table in self.tables.keys(): 
+            self.check_record_files(table)
+        for index in self.indices.keys(): 
+            self.check_index_files(index)
+        
 
     # save the catalog
     def save(self):
@@ -117,7 +123,6 @@ class catalog_manager:
         file.close()
 
     # raise an exception if the table exists
-
     def table_exists(self, name):
         # for tbl_name in tables.keys():
         #     if name == tbl_name:
@@ -126,25 +131,21 @@ class catalog_manager:
             raise Exception("INVALID IDENTIFIER: Table '%s' exists" % name)
 
     # raise an exception if the table does not exist
-
     def table_not_exists(self, name):
         if name not in self.tables.keys():
             raise Exception("INVALID IDENTIFIER: Table '%s' doesn't exist" % name)
 
     # raise an exception if the index exists
-
     def index_exists(self, name):
         if name in self.indices.keys():
             raise Exception("INVALID IDENTIFIER: Index '%s' exists" % name)
 
     # raise an exception if the index does not exist
-
     def index_not_exists(self, name):
         if name not in self.indices.keys():
             raise Exception("INVALID IDENTIFIER: Index '%s' doesn't exist" % name)
 
     # raise an exception if the key does not exist in the table
-
     def key_not_exists(self, tbl_name, key):
         self.table_not_exists(tbl_name)
         for attr in self.tables[tbl_name].attributes:
@@ -154,7 +155,6 @@ class catalog_manager:
                         (key, tbl_name))
 
     # raise an exception if the key is not unique
-
     def key_not_unique(self, tbl_name, key):
         self.table_not_exists(tbl_name)
         for attr in self.tables[tbl_name].attributes:
@@ -176,7 +176,6 @@ class catalog_manager:
 
     # update the file & tables
     # assume that the values have been processed by the interpreter
-
     def create_table(self, tbl_name, primary_key, attrlist):
         self.table_exists(tbl_name)
         tmp = Table(tbl_name, primary_key, len(attrlist))
@@ -186,13 +185,11 @@ class catalog_manager:
         self.tables[tbl_name] = tmp
 
     # update the file & tables
-
     def drop_table(self, tbl_name):
         self.table_not_exists(tbl_name)
         self.tables.pop(tbl_name)
 
     # update the file & indices
-
     def create_index(self, index_name, tbl_name, key):
         self.key_not_exists(tbl_name, key)
         self.key_not_unique(tbl_name, key)
@@ -200,11 +197,34 @@ class catalog_manager:
         self.indices[index_name] = [tbl_name, key]
 
     # update the file & indices
-
     def drop_index(self, index_name):
         self.index_not_exists(index_name)
         self.indices.pop(index_name)
 
+    def check_record_files(self, table): 
+        if len(self.tables) != 0: 
+            # check folders
+            os.chdir(sys.path[0])
+            record_folder = pathlib.Path('./record')
+            if not record_folder.exists(): 
+                raise Exception('ERROR: ALL the metadata may be lost! Please check your files!')
+            # check record files
+            recpath = './record/'+table+'.rec'
+            if not pathlib.Path(recpath).exists(): 
+                raise Exception('ERROR: Metadata of table %s may be lost! Please check your files! Choose to drop this table or rebuild this table'%table)
+
+
+    def check_index_files(self, index): 
+        if len(self.indices) != 0: 
+            # check folders
+            os.chdir(sys.path[0])
+            index_folder  = pathlib.Path('./index')
+            if not index_folder.exists(): 
+                raise Exception('ERROR: ALL the indices may be lost! Please check your files!')
+            # check record files
+            indpath = './index/'+index+'.ind'
+            if not pathlib.Path(indpath).exists(): 
+                raise Exception('ERROR: Index %s may be lost! Please check your files! Choose to drop this index or rebuild this index'%index)
 
 if __name__ == "__main__":
     t = catalog_manager()

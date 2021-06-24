@@ -113,6 +113,10 @@ class API():
 
     def insert_record(self, table, value, attr=None, import_flag = False):
         self.catalog.table_not_exists(table)
+        self.catalog.check_record_files(table)
+        for index in self.catalog.indice.keys(): 
+            if self.catalog.indice[index][0] == table: 
+                self.catalog.check_index_files(index)
         # mind to encode the string before calling self.record.insert()
         '''check whether the number of values input equals to the number of attributes'''
         if attr is not None and (len(attr) != len(value)):
@@ -280,39 +284,38 @@ class API():
         print("%d entrys affected" % len(result_record))
         print('Successfully update')
 
-    def show_table(self):
+    def show_table(self, table):
         info = ["attribute_name", "atrribute_type", "uniqueness"]
         print('-' * (20 * len(info) + 1))
         print('|', "Table Infomation".center((20 * len(info) - 2)), end='')
         print('|')
         print('-' * (20 * len(info) + 1))
-        for table in self.catalog.tables:
-            tables = self.catalog.tables[table]
-            print('-' * (20 * len(info) + 1))
-            print('|', str(tables.table_name).center((20 * len(info) - 2)), end='')
+        tables = self.catalog.tables[table]
+        print('-' * (20 * len(info) + 1))
+        print('|', str(tables.table_name).center((20 * len(info) - 2)), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
+        for info_item in info:
+            print('|', info_item.center(18), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
+        for attr in tables.attributes:
+            print('|', str(attr.name).center(18), end='')
+            if attr.type == 'i':
+                attr_type = 'int'
+            elif attr.type == 'f':
+                attr_type = 'float'
+            else:
+                attr_type = 'char(' + attr.type[:-1] + ')'
+            print('|', str(attr_type).center(18), end='')
+            if attr.name == tables.primary_key:
+                print('|', "primary".center(18), end='')
+            else:
+                print('|', str(attr.uniqueness).center(18), end='')
             print('|')
             print('-' * (20 * len(info) + 1))
-            for info_item in info:
-                print('|', info_item.center(18), end='')
-            print('|')
-            print('-' * (20 * len(info) + 1))
-            for attr in tables.attributes:
-                print('|', str(attr.name).center(18), end='')
-                if attr.type == 'i':
-                    attr_type = 'int'
-                elif attr.type == 'f':
-                    attr_type = 'float'
-                else:
-                    attr_type = 'char(' + attr.type[:-1] + ')'
-                print('|', str(attr_type).center(18), end='')
-                if attr.name == tables.primary_key:
-                    print('|', "primary".center(18), end='')
-                else:
-                    print('|', str(attr.uniqueness).center(18), end='')
-                print('|')
-                print('-' * (20 * len(info) + 1))
 
-    def show_index(self):
+    def show_index(self, index):
         info = ["index_name", "table_name", "attribute_name"]
         print('-' * (20 * len(info) + 1))
         print('|', "Index Infomation".center((20 * len(info) - 2)), end='')
@@ -322,13 +325,12 @@ class API():
             print('|', info_item.center(18), end='')
         print('|')
         print('-' * (20 * len(info) + 1))
-        for index in self.catalog.indices:
-            index_item = self.catalog.indices[index]
-            print('|', str(index).center(18), end='')
-            print('|', str(index_item[0]).center(18), end='')
-            print('|', str(index_item[1]).center(18), end='')
-            print('|')
-            print('-' * (20 * len(info) + 1))
+        index_item = self.catalog.indices[index]
+        print('|', str(index).center(18), end='')
+        print('|', str(index_item[0]).center(18), end='')
+        print('|', str(index_item[1]).center(18), end='')
+        print('|')
+        print('-' * (20 * len(info) + 1))
 
     def output(self, table, file_path):
         # path = "./test/test_data/"

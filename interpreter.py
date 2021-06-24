@@ -138,7 +138,7 @@ def t_COLUMN(t):
         t.type = 'SHOW'
     if t.value in ['import', 'IMPORT']:
         t.type = 'IMPORT'
-    if t.value in ['export','EXPORT']:
+    if t.value in ['export', 'EXPORT']:
         t.type = 'EXPORT'
     return t
 
@@ -326,19 +326,20 @@ class Create(object):
                     attr = attr.strip().split(',')
                     for i in range(len(attr)):
                         if self.values[i][0] != attr[i]:
-                            raise Exception("SYNTAX Error: Invalid attribute name %s"%self.values[i][0])
+                            raise Exception(
+                                "SYNTAX Error: Invalid attribute name %s" % self.values[i][0])
                     datas = f.readlines()
                     f.close()
 
                     for item in datas:
-                        if item == datas[-1]: 
+                        if item == datas[-1]:
                             j = item.split(',')
                             api.insert_record(self.table, j)
-                        else : 
+                        else:
                             j = item.split(',')
                             j[-1] = j[-1].strip('\n')
-                            api.insert_record(self.table, j, import_flag = True)
-                    print('%d rows affected'%len(datas))
+                            api.insert_record(self.table, j, import_flag=True)
+                    print('%d rows affected' % len(datas))
 
                 except:
                     api.drop_table(self.table)
@@ -680,12 +681,15 @@ def p_expression_import(t):
     current_action.from_import = t[4]
     current_action.set_primary(t[11])
     current_action.add_stack(stack)
+
+
 def p_expression_export(t):
     '''exp_export : EXPORT COLUMN FROM COLUMN END'''
     if t[4] not in catalog.tables.keys():
         raise Exception(
             "INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[4]))
-    api.output(t[4],t[2])
+    api.output(t[4], t[2])
+
 
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
@@ -714,18 +718,21 @@ def p_expression_show_table(t):
     if t[3] not in catalog.tables.keys():
         raise Exception(
             "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
-    print(t[3])
-    # api.show_table()
+    api.show_table(t[3])
+
+
 def p_expression_show(t):
     ''' exp_show : SHOW END '''
     api.show()
+
+
 def p_expression_show_index(t):
     '''exp_show_index : SHOW INDEX COLUMN END '''
     if t[3] not in catalog.indices.keys():
         raise Exception(
             "INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
-    print(t[3])
-    # api.show_index()
+    api.show_index(t[3])
+
 
 def p_expression_execfile(t):
     '''exp_execfile : EXECFILE COLUMN END'''
@@ -749,13 +756,13 @@ def p_error(p):
 def interpreter(data):
     if not data.strip():
         return
-    if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT','export','EXPORT']:
+    if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT', 'export', 'EXPORT']:
         data = data.lower()
-    elif data.split(' ')[0]  in ['import', 'IMPORT']:
+    elif data.split(' ')[0] in ['import', 'IMPORT']:
         a = [item.lower() for item in data.split(' ')]
         a[3] = data.split(' ')[3]
         data = ' '.join(a)
-    elif data.split(' ')[0] in ['EXPORT','export']:
+    elif data.split(' ')[0] in ['EXPORT', 'export']:
         a = data.split(' ')
         a[3] = a[3].lower()
         data = ' '.join(a)

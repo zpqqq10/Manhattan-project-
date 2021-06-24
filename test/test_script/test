@@ -29,7 +29,7 @@ delete from abc where sex='M';
 delete from abb where sex='M'; 
 delete from abc where see='M'; 
 delete from abc where sex=123; 
-exit
+exit;
 
 create table students (sid int,name char(10) unique,sex char(1),phone int, gpa float, primary key(sid));
 insert into students values(3192222, 'Cheung', 'F', 1234567, 3.1); 
