@@ -1,6 +1,7 @@
 import codecs
 import csv
 import time
+import copy
 class optimizer(object):
     def __init__(self, catalog):
         self.catalog = catalog
@@ -132,12 +133,13 @@ class API():
         '''call self.record.insert()'''
         attribute = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
-        self.record.insert(table, attribute, value)
+        pos = self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
         if import_flag is False: 
             self.__all_index_update(table, attr)
+        return pos
         
-    def delete_record(self, table, conditions):
+    def delete_record(self, table, conditions, from_update = False):
         '''update the record and the index'''
         for condition in conditions: 
             self.catalog.key_not_exists(table, condition[0])
@@ -170,8 +172,9 @@ class API():
             self.record.delete_with_index(table, bid, offset)
         # call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index
         self.__all_index_update(table, attrlist)
-        print("%d entrys affected" % len(result_record))
-        print('Successfully delete')
+        if not from_update:
+            print("%d entrys affected" % len(result_record))
+            print('Successfully delete')
 
     def select(self, table, cols, conditions):
         for item in conditions:
@@ -280,26 +283,48 @@ class API():
         attrlist = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
         (result_record, result_ptr) = self.record.scan_all(table, conditions, attrlist)
-
+        copy_record = []
+        for record in result_record:
+            record = list(record)
+            for i, attr in enumerate(self.catalog.tables[table].attributes):
+                type = attr.type
+                if type[-1] == 's':
+                    record[i] = "'" + record[i].strip(b'\x00').decode('utf-8') + "'"
+                elif type[0] == 'i':
+                    record[i] = str(round(int(record[i]), 4))
+                else:
+                    record[i] = str(round(float(record[i]), 4))
+            copy_record.append(record)
+        update_record = copy.deepcopy(copy_record)
         for item in fields:
             for i, attr in enumerate(self.catalog.tables[table].attributes):
                 if attr.name == item[0]:
                     index = i
                     type = attr.type
                     break
-            for record in result_record:
-                record = list(record)
-                if type[-1] == 's':
-                    record[index] = item[1][1:-1].encode('utf-8')
-                else:
-                    record[index] = item[1]
-                record = tuple(record)
-        for bid, offset in result_ptr: 
-            self.record.delete_with_index(table, bid, offset)
-        self.record.insert(table, attrlist, record)
+            for record in update_record:
+                record[index] = item[1]
+        insert_position = []
+        self.delete_record(table, conditions, True)
+        flag = True
+        for i in range(0, len(result_record)):
+            try:
+                pos = self.insert_record(table, update_record[i])
+                insert_position.append(pos)
+            except Exception as e:
+                print(e)
+                # not consist to unique, undo
+                for j in range(0, i):
+                    (i_bid, i_off) = insert_position[j]
+                    self.record.delete_with_index(table, i_bid, i_off)
+                for undo_record in copy_record:
+                    self.insert_record(table, undo_record)
+                flag = False
+                break
         self.__all_index_update(table, attrlist)
-        print("%d entrys affected" % len(result_record))
-        print('Successfully update')
+        if flag:
+            print("%d entrys affected" % len(result_record))
+            print('Successfully update')
 
     def show_table(self, table):
         info = ["attribute_name", "atrribute_type", "uniqueness"]
@@ -427,7 +452,7 @@ class API():
                 value[i] = value[i][1:-1]
                 value[i] = str(value[i])
                 if len(value[i]) > item.length: 
-                    raise Exception("ERROR: Data too long for column '%s'"%item.name)
+                    raise Exception("INVALID VALUE: Data too long for column '%s'"%item.name)
                 value[i] = value[i].encode('utf-8')
             elif item.type == 'i':
                 value[i] = int(value[i])
@@ -441,9 +466,9 @@ class API():
             for j, column in enumerate(self.catalog.tables[table].attributes):
                 if column.uniqueness is True:
                     if len(column.type) == 1 and check_record[i][j] == value[j]:
-                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
+                        raise Exception('INVALID VALUE: Duplicate entry ' + column.name + ' for ' + str(value[j]))
                     elif len(column.type) != 1 and check_record[i][j].strip(b'\x00') == value[j]:
-                        raise Exception('INVALID VALUE Error: Duplicate entry ' + column.name + ' for ' + str(value[j]))
+                        raise Exception('INVALID VALUE: Duplicate entry ' + column.name + ' for ' + str(value[j]))
 
     def __all_index_update(self, table, attr): 
         result_value, result_ptr = self.record.scan_all(table, [], attr)
