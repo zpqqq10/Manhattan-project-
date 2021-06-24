@@ -744,6 +744,8 @@ def p_error(p):
 
 
 def interpreter(data):
+    if not data.strip():
+        return
     if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT','export','EXPORT']:
         data = data.lower()
     elif data.split(' ')[0]  in ['import', 'IMPORT']:
