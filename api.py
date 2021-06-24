@@ -330,9 +330,9 @@ class API():
             print('|')
             print('-' * (20 * len(info) + 1))
 
-    def output(self, table, file_name):
-        path = "./test/test_data/"
-        post = ".csv"
+    def output(self, table, file_path):
+        # path = "./test/test_data/"
+        # post = ".csv"
         attrlist = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
         (result_record, result_ptr) = self.record.scan_all(table, [], attrlist)
@@ -347,7 +347,8 @@ class API():
                     record[attrlist.index(attr)] = round(record[attrlist.index(attr)], 4)
             record = tuple(record)
             process_data.append(record)
-        f = codecs.open(path + file_name + post,'w', 'utf-8')
+        # f = codecs.open(path + file_name + post,'w', 'utf-8')
+        f = codecs.open(file_path,'w', 'utf-8')
         writer = csv.writer(f)
         attr_name = []
         for attr in attrlist:
@@ -356,7 +357,7 @@ class API():
         for record in process_data:
             writer.writerow(record)
         f.close()
-        print("Succesfully Output, you can find the file at: " + path + file_name + post)
+        print("Succesfully Output, you can find the file at: " +file_path)
 
     def exit(self):
         self.catalog.save()

@@ -1,3 +1,4 @@
+from posixpath import join
 from sys import version
 import ply.lex as lex
 import ply.yacc as yacc
@@ -43,7 +44,8 @@ tokens = (
     "EXECFILE",
     "HELP",
     "SHOW",
-    "IMPORT"
+    "IMPORT",
+    "EXPORT"
 )
 
 
@@ -79,6 +81,7 @@ t_EXECFILE = r'EXECFILE|execfile'
 t_HELP = r'HELP|help'
 t_SHOW = r'SHOW|show'
 t_IMPORT = r'import|IMPORT'
+t_EXPORT = r'export|EXPORT'
 # ''' '"[a-zA-Z0-9/ '_.-]+"|'[a-zA-Z0-9/ "_.-]+'| '''
 
 
@@ -135,6 +138,8 @@ def t_COLUMN(t):
         t.type = 'SHOW'
     if t.value in ['import', 'IMPORT']:
         t.type = 'IMPORT'
+    if t.value in ['export','EXPORT']:
+        t.type = 'EXPORT'
     return t
 
 
@@ -496,9 +501,11 @@ def p_expression_start(t):
                     | exp_delete
                     | exp_execfile
                     | exp_help
-                    | exp_show
+                    | exp_show_table
+                    | exp_show_index
                     | exp_update
-                    | exp_import'''
+                    | exp_import
+                    | exp_export'''
 
 
 def p_expression_exit(t):
@@ -672,7 +679,12 @@ def p_expression_import(t):
     current_action.from_import = t[4]
     current_action.set_primary(t[11])
     current_action.add_stack(stack)
-
+def p_expression_export(t):
+    '''exp_export : EXPORT COLUMN FROM COLUMN END'''
+    if t[4] not in catalog.tables.keys():
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table doesn't exist".format(t[4]))
+    api.output(t[4],t[2])
 
 def p_expression_condition(t):
     '''exp_condition : COLUMN OP COLUMN
@@ -696,10 +708,21 @@ def p_expression_columns(t):
     stack.append(t[1])
 
 
-def p_expression_show(t):
-    ''' exp_show : SHOW END '''
-    api.show()
+def p_expression_show_table(t):
+    ''' exp_show_table : SHOW TABLE COLUMN END '''
+    if t[3] not in catalog.tables.keys():
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} table not exists".format(t[3]))
+    print(t[3])
+    # api.show_table()
 
+def p_expression_show_index(t):
+    '''exp_show_index : SHOW INDEX COLUMN END '''
+    if t[3] not in catalog.indices.keys():
+        raise Exception(
+            "INVALID IDENTIFIER Error: {0} index not exists".format(t[3]))
+    print(t[3])
+    # api.show_index()
 
 def p_expression_execfile(t):
     '''exp_execfile : EXECFILE COLUMN END'''
@@ -721,8 +744,16 @@ def p_error(p):
 
 
 def interpreter(data):
-    if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT']:
+    if data.split(' ')[0] not in ['execfile', 'EXECFILE', 'import', 'IMPORT','export','EXPORT']:
         data = data.lower()
+    elif data.split(' ')[0]  in ['import', 'IMPORT']:
+        a = [item.lower() for item in data.split(' ')]
+        a[3] = data.split(' ')[3]
+        data = ' '.join(a)
+    elif data.split(' ')[0] in ['EXPORT','export']:
+        a = data.split(' ')
+        a[3] = a[3].lower()
+        data = ' '.join(a)
     yacc.yacc()
     yacc.parse(data)
 
