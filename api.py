@@ -141,7 +141,7 @@ class API():
         
     def delete_record(self, table, conditions, from_update = False):
         '''update the record and the index'''
-        for condition in conditions: 
+        for condition in conditions:
             self.catalog.key_not_exists(table, condition[0])
         self.catalog.check_record_files(table)
         for index in self.catalog.indices.keys(): 
@@ -149,8 +149,6 @@ class API():
                 self.catalog.check_index_files(index)
         # process constraints
         conditions = self.__condition_process(table, conditions)
-        for item in conditions:
-                self.catalog.key_not_exists(table, item[0])
         attrlist = [[item.name, item.type, item.length, item.uniqueness] for item in self.catalog.tables[table].attributes]
         # checke index
         delete_opt_Res = self.optimizer.check_opt(table, conditions)
@@ -279,6 +277,7 @@ class API():
             if self.catalog.indices[index][0] == table: 
                 self.catalog.check_index_files(index)
         # process constraints
+        copy_conditions = copy.deepcopy(conditions)
         conditions = self.__condition_process(table, conditions)
         attrlist = [[item.name, item.type, item.length, item.uniqueness]
                      for item in self.catalog.tables[table].attributes]
@@ -305,7 +304,7 @@ class API():
             for record in update_record:
                 record[index] = item[1]
         insert_position = []
-        self.delete_record(table, conditions, True)
+        self.delete_record(table, copy_conditions, True)
         flag = True
         for i in range(0, len(result_record)):
             try:
