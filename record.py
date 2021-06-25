@@ -4,6 +4,7 @@ import sys
 from buffer import bufferManager, bufferBlock
 from functools import reduce
 import pathlib
+import math
 
 
 class record_manager:
@@ -124,10 +125,16 @@ class record_manager:
                 else:
                     return False
             elif item[1] == 4:
-                if record_content == item[2]:
-                    continue
+                if attr[item[0]][1][0] == 'f':
+                    if math.isclose(record_content, item[2], rel_tol=1e-5):
+                        continue
+                    else:
+                        return False
                 else:
-                    return False
+                    if record_content == item[2]:
+                        continue
+                    else:
+                        return False
             elif item[1] == 5:
                 if record_content != item[2]:
                     continue
