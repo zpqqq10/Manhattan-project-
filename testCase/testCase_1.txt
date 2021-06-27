@@ -1,0 +1,15 @@
+create table user (id int, nick_name char(10) unique, gender char(1), score float, primary key (id));
+show table user;
+show;
+drop table user;
+show;
+create table user (id int, nick_name char(10) unique, gender char(1), score float, primary key (id));
+create index user_name_index on user (nick_name);
+show index user_name_index;
+drop index user_name_index;
+show;
+create index user_name_index on user (nick_name);
+insert into user values (31901001, 'mike', 'M', 94.0);
+insert into user values (31901002, 'john', 'M', 75.6);
+insert into user values (31902001, 'max', 'F', 33.3);
+insert into user values (31902003, 'lucy', 'F', -5.0);

@@ -1,0 +1,12 @@
+show;
+show table user;
+show index user_name_index;
+help;
+import import_test from ./test/test_data/test.csv (id int,name char(10) unique,gender char(1),primary key(id));
+show table import_test;
+select * from import_test where name = 'qvzmy';
+create index import_test_name_index on import_test (name);
+select * from import_test where name = 'qvzmy';
+select * from import_test where name = 'qvzmy';
+
+export ./test/test_data/user.csv from user;

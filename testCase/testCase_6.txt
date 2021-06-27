@@ -1,0 +1,13 @@
+select from user;
+select from user
+insert into user (31901003, 'ErrorTest', 'F', 88.88);
+create table errortest (id int, name char(10), primary key (stu_id));
+import import_error_test from ./test/test_data/test.csv (id int,stu_name char(10) unique,gender char(1),primary key(id));
+insert into user (31901008);
+select * from fake_table;
+create table user (id int, primary key (id));
+import user from ./test/test_data/test.csv (id int,stu_name char(10) unique,gender char(1),primary key(id));
+create index user_name_index on user (id);
+insert into user values (31901008, 'blablablablablablablabla', 'M', 66.66);
+insert into user values (31901001, 'john', 'M', 66.66);
+quit;

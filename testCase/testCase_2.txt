@@ -1,0 +1,13 @@
+select * from user;
+select id, nick_name from user;
+select * from user where id = 31901001;
+select * from user where id = 88888888;
+select * from user where nick_name = "John";
+select * from user where nick_name = 'john';
+select * from user where score = 33.3;
+select id, nick_name, score from user where id <> 31901001;
+select id, nick_name, score from user where id <> 88888888;
+select * from user where nick_name <> "john";
+select * from user where nick_name <> "bdz";
+select * from user where score <> -5.0;
+select * from user where score <> 100;
