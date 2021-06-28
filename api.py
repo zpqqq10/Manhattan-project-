@@ -136,6 +136,7 @@ class API():
         pos = self.record.insert(table, attribute, value)
         '''call self.record.scan_all(), self.index.create_index() and self.index.save_Bplus() to update the index'''
         if import_flag is False: 
+            self.buffer.commitAll()
             self.__all_index_update(table, attr)
         return pos
         

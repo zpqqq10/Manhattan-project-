@@ -472,6 +472,7 @@ class index_manager():
 
     def create_index(self, index_name, addresses, values, order):
         # if len(values) != 0:
+        self.create_index_file(index_name)
         self.build_Bplus(index_name, addresses, values, order)
         self.print_tree()
 
