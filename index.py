@@ -178,6 +178,8 @@ class index_manager():
             else:
                 # find the value and return its position
                 # the last child is the pointer
+                if keys == []: 
+                    return []
                 if value < keys[0]:
                     if operate == 0 or operate == 1:
                         cur_bid -= 1
