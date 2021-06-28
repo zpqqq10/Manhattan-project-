@@ -440,6 +440,8 @@ class API():
             elif self.catalog.tables[table].attributes[idx].type == 'f':
                 item[2] = float(item[2]) 
             else :
+                if item[2][0] != "'" or len(item[2])<3: 
+                    raise Exception('SYNTAX Error: There is illegal variable in your SQL syntax')
                 item[2] = item[2][1:-1]
                 item[2] = item[2].encode('utf-8')
             item[0] = idx
@@ -448,6 +450,8 @@ class API():
     def __string_process(self, table, value): 
         for i, item in enumerate(self.catalog.tables[table].attributes):
             if item.type[-1] == 's':
+                if value[i][0] != "'" or len(value[i])<3: 
+                    raise Exception('SYNTAX Error: There is illegal variable in your SQL syntax')
                 value[i] = value[i][1:-1]
                 value[i] = str(value[i])
                 if len(value[i]) > item.length: 
